@@ -1,0 +1,43 @@
+.action-group {
+    padding: 5px 10px 5px 0;
+}
+
+.image-container {
+    background: #ddd;
+    display: block;
+    position: relative;
+    height: 480px;
+  }
+  
+  .icon-item {
+    padding: 15px;
+  }
+  .icon-circle {
+    display: inline-block;
+    border: 1px solid #aaa;
+    border-radius: 8px;
+    width: 16px;
+    height: 16px;
+  }
+  
+  .mark-rect {
+    position: absolute;
+    border: 2px solid red;
+    background: rgb(0, 0, 0, 0.6);
+  }
+  
+  .mark-rect .icon::before {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    width: 15px;
+    height: 15px;
+    border: 1px solid #999;
+    line-height: 12px;
+    text-align: center;
+  }
+
+  .icon-close::before {
+    content: 'x';
+    color: #ddd;
+  }

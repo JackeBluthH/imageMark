@@ -3,3 +3,7 @@
 
 # Ada Library Information
 *.ali
+
+.git
+src/.umi
+node_modules

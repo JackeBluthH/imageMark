@@ -1,0 +1,45 @@
+
+.button-group {
+    display: inline-block;
+}
+.button-group > .btn {
+    cursor: pointer;
+    display: inline-block;
+    padding: 5px 10px;
+    border-left: 0;
+    text-decoration: none;
+}
+
+/* blue */
+/*
+.button-group > .btn {
+    background: #1890ff;
+    border: 1px solid #0d61af;
+    color: #fff;
+}
+.button-group > .btn:first-child {
+    border-left: 1px solid #0d61af;
+}
+.button-group > .btn:hover {
+    background: #40a9ff;
+}
+.button-group > .btn.active {
+    background: #55b3ff;
+}
+*/
+
+/* black */
+.button-group > .btn {
+    background: #111111;
+    border: 1px solid #666666;
+    color: #fff;
+}
+.button-group > .btn:first-child {
+    border-left: 1px solid #666666;
+}
+.button-group > .btn:hover {
+    background: #555555;
+}
+.button-group > .btn.active {
+    background: #555555;
+}

@@ -1,0 +1,48 @@
+.layout-panel{
+    padding: 0;
+    margin: 0;
+}
+.layout-panel > div {
+    padding: 10px;
+}
+.layout-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50px;
+}
+.layout-sidebar {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    bottom: 0;
+    width: 200px;
+}
+.layout-content {
+    margin-top: 50px;
+    margin-left: 200px;
+}
+
+/* theme */
+.layout-header {
+    background: rgb(0, 0, 0);
+    color: #999;
+}
+.layout-header h1 {
+    color: #999;
+}
+
+.layout-sidebar {
+    padding-top: 10px;
+    background: rgb(0, 0, 0, 0.9);
+    color: white;
+
+}
+.layout-sidebar a {
+    color: white;
+}
+
+.layout-footer {
+    display: none;
+}
