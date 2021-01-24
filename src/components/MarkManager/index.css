@@ -41,3 +41,11 @@
     content: 'x';
     color: #ddd;
   }
+
+  .custom-form .form-row {
+    border-bottom: 1px solid #111;
+  }
+
+  .custom-form input {
+    color: black;
+  }

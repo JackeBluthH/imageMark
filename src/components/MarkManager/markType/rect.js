@@ -1,4 +1,6 @@
 
+const MIN_LENGTH = 10;
+
 function createMark(container) {
     const div = document.createElement('div');
     div.className = 'mark-rect';
@@ -17,15 +19,32 @@ function createClose(div) {
     div.appendChild(divClose);
 }
 
-function create(p1, { container, coordin, saveMark }) {
+function create(p1, { container, coordin, saveMark, showProperties }) {
     const div = createMark(container);
-    div.addEventListener('click', function(e) {
-        showProperties();
-    });
+
+    const _stop = e => e.preventDefault();
+    function bindEvent() {
+        div.addEventListener('mousedown', _stop);
+        div.addEventListener('mouseup', _stop);
+        div.addEventListener('click', function (e) {
+            _stop(e);
+            showProperties({
+                items: [
+                    { label: 'type', type: 'text', value:'rect' },
+                    { label: 'name', type: 'input' },
+                    { label: 'others', type: 'input' },
+                ]
+            });
+        });
+    }
 
     const P1 = coordin.transCanvasPort(p1);
-    const mark = { type: 'rect', P1: coordin.canvas2User(P1) };
+    const mark = { type: 'rect', P1 };
 
+    function cancel() {
+        container.removeChild(div);
+    }
+    
     return {
         moveTo: function _moveto(p2) {
             const P2 = coordin.transCanvasPort(p2);
@@ -47,16 +66,23 @@ function create(p1, { container, coordin, saveMark }) {
         },
 
         // 取消时删除生成的DOM
-        cancel: function _cancel() {
-            container.removeChild(div);
-        },
+        cancel,
 
         // 结束时保存当前的标记
         end: function _end() {
+            console.log('end:', Math.abs(mark.P2.x - mark.P1.x), Math.abs(mark.P2.y - mark.P1.y));
+            if (Math.abs(mark.P2.x - mark.P1.x) < MIN_LENGTH || Math.abs(mark.P2.y - mark.P1.y) < MIN_LENGTH) {
+                cancel();
+                return;
+            }
+
+            mark.P1 = coordin.canvas2User(mark.P1);
             mark.P2 = coordin.canvas2User(mark.P2);
             const markId = saveMark(mark);
             createClose(div);
             div.id = getDomId(markId);
+
+            setTimeout(bindEvent, 20);
         },
     }
 }

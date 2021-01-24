@@ -24,6 +24,8 @@ const UserLayout = (props) => {
                 {children}
                 <Footer />
             </div>
+            <div className="layout-panel layout-helper">
+            </div>
             <div className="layout-panel layout-footer">
 
             </div>

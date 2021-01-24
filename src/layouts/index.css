@@ -19,6 +19,14 @@
     bottom: 0;
     width: 200px;
 }
+.layout-helper {
+    position: fixed;
+    top: 50px;
+    right: 0;
+    bottom: 0;
+    width: 200px;
+    transition: cubic-bezier(0.23, 1, 0.320, 1);
+}
 .layout-content {
     margin-top: 50px;
     margin-left: 200px;
@@ -37,9 +45,14 @@
     padding-top: 10px;
     background: rgb(0, 0, 0, 0.9);
     color: white;
-
 }
 .layout-sidebar a {
+    color: white;
+}
+
+.layout-helper {
+    padding-top: 10px;
+    background: rgb(0, 0, 0, 0.85);
     color: white;
 }
 

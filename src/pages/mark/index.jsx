@@ -49,6 +49,11 @@ class ImageMark extends React.Component {
     }
     // action of click
     doImgMark = (e) => {
+        if (e.isDefaultPrevented()) {
+            return;
+        }
+        
+        console.log('doImgMark');
         const curPoint = { x: e.pageX, y: e.pageY };
         const fn = ({
             'zoomout': () => {
@@ -145,7 +150,9 @@ class ImageMark extends React.Component {
                     <ButtonGroup className="action-group" onClick={this.setImgType} buttons={toolBtn} type="radio" />
                     <ButtonGroup className="action-group" onClick={this.btnAction} buttons={actionBtn} />
                 </div>
-                <div className="image-container" onMouseDown={this.doImgMark} onMouseUp={this.doImgMark} onMouseMove={this.markMove} id={this.canvasId}></div>
+                <div className="image-container" onMouseDown={this.doImgMark} onMouseUp={this.doImgMark} onMouseMove={this.markMove} id={this.canvasId}>
+
+                </div>
                 <div>
                     {this.state.markInfo.map(mark => (
                         <div key={mark.id}>{mark.id}. {mark.type} {renderPoint(mark.P1)} {renderPoint(mark.P2)}</div>

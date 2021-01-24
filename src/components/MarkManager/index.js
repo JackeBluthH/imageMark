@@ -1,6 +1,10 @@
+
+import showProperties from './form';
 import pluginMove from './markType/move';
 import markRect from './markType/rect';
 import markCircle from './markType/circle';
+
+import './index.css';
 
 const MarkTypes = [
     pluginMove,
@@ -288,7 +292,8 @@ function ImageManager(containerId) {
                 container,
                 coordin,
                 draw,
-                saveMark: (info) => saveMark(markType.name, info)
+                saveMark: (info) => saveMark(markType.name, info),
+                showProperties,
             };
             result[sMethod] = (...params) => markType.create(...params, { ...opt, viewPort: { ...ViewPort } });
             return result;
