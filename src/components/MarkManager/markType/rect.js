@@ -1,4 +1,7 @@
 
+import React, { useState } from 'react';
+import showProperties from '../form';
+
 const MIN_LENGTH = 10;
 
 function createMark(container) {
@@ -19,50 +22,86 @@ function createClose(div) {
     div.appendChild(divClose);
 }
 
-function create(p1, { container, coordin, saveMark, showProperties }) {
-    const div = createMark(container);
+function RectRender({id, x, y, width, height, drawing, removeMark}) {
+    const [visible, setVisible ] = useState(true);
+    const style = {
+        width: `${width}px`,
+        height: `${height}px`,
+        left: `${x}px`,
+        top: `${y}px`,
+    }
 
-    const _stop = e => e.preventDefault();
-    function bindEvent() {
-        div.addEventListener('mousedown', _stop);
-        div.addEventListener('mouseup', _stop);
-        div.addEventListener('click', function (e) {
-            _stop(e);
-            showProperties({
-                items: [
-                    { label: 'type', type: 'text', value:'rect' },
-                    { label: 'name', type: 'input' },
-                    { label: 'others', type: 'input' },
-                ]
-            });
+    const RectForm = [
+        { name: 'type', label: 'type', type: 'text', value: 'rect' },
+        { name: 'name', label: 'name', type: 'input', value: id },
+        { name: 'others', label: 'others', type: 'input' },
+    ];
+    
+    const onClick = (e) => {
+        if (e.isDefaultPrevented()) {
+            return;
+        }
+        e.preventDefault();
+        showProperties({
+            name: id,
+            items: RectForm,
+            onOK: function (values) {
+                // updateMark
+                console.log(values);
+            }
         });
     }
+    const onMouseDown = (e) => {
+        e.preventDefault();
+    }
+    const onMouseUp = (e) => {
+        e.preventDefault();
+    }
 
+    function onRemoveMark(e) {
+        e.preventDefault();
+        removeMark(id);
+        setTimeout(() => setVisible(false), 10);
+    }
+
+    if (!visible) {
+        return null;
+    }
+    return (
+        <div onClick={onClick} onMouseDown={onMouseDown} onMouseUp={onMouseUp} className="mark-rect" key={id} style={style}>
+            {!drawing && <div onClick={onRemoveMark} className="icon icon-close" />}
+        </div>
+    )
+}
+
+function create(p1, { coordin, saveMark }) {
     const P1 = coordin.transCanvasPort(p1);
-    const mark = { type: 'rect', P1 };
+    const mark = {
+        type: 'rect',
+        x: P1.x,
+        y: P1.y,
+        width: 0,
+        height: 0,
+    };
 
     function cancel() {
-        container.removeChild(div);
+        // container.removeChild(div);
     }
-    
+
     return {
+        getMark: function () {
+            return { ...mark };
+        },
         moveTo: function _moveto(p2) {
             const P2 = coordin.transCanvasPort(p2);
 
             // 设置div的left为左边的点
-            const nWidth = Math.abs(P2.x - P1.x);
-            const nLeft = (P2.x < P1.x) ? P2.x : P1.x;
-            div.style.left = `${nLeft}px`;
-            div.style.width = `${nWidth}px`;
+            mark.width = Math.abs(P2.x - P1.x);
+            mark.x = Math.min(P2.x, P1.x);
 
             // 设置div的top为上边的点
-            const nHeight = Math.abs(P2.y - P1.y);
-            const nTop = (P2.y < P1.y) ? P2.y : P1.y;
-            div.style.top = `${nTop}px`;
-            div.style.height = `${nHeight}px`;
-
-            // 移动过程实时记录结束点的位置
-            mark.P2 = P2;
+            mark.height = Math.abs(P2.y - P1.y);
+            mark.y = Math.min(P2.y, P1.y);
         },
 
         // 取消时删除生成的DOM
@@ -70,19 +109,13 @@ function create(p1, { container, coordin, saveMark, showProperties }) {
 
         // 结束时保存当前的标记
         end: function _end() {
-            console.log('end:', Math.abs(mark.P2.x - mark.P1.x), Math.abs(mark.P2.y - mark.P1.y));
-            if (Math.abs(mark.P2.x - mark.P1.x) < MIN_LENGTH || Math.abs(mark.P2.y - mark.P1.y) < MIN_LENGTH) {
+            if (mark.width < MIN_LENGTH || mark.height < MIN_LENGTH) {
                 cancel();
                 return;
             }
 
-            mark.P1 = coordin.canvas2User(mark.P1);
-            mark.P2 = coordin.canvas2User(mark.P2);
-            const markId = saveMark(mark);
-            createClose(div);
-            div.id = getDomId(markId);
-
-            setTimeout(bindEvent, 20);
+            // mark.P1 = coordin.canvas2User(mark.P1);
+            saveMark(mark);
         },
     }
 }
@@ -96,6 +129,7 @@ const TypeDef = {
     description: '矩形框标注',
     create,
     zoom,
+    render: (props) => <RectRender key={props.id} {...props}/>,
 };
 
 export default TypeDef;

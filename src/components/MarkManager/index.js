@@ -1,5 +1,4 @@
 
-import showProperties from './form';
 import pluginMove from './markType/move';
 import markRect from './markType/rect';
 import markCircle from './markType/circle';
@@ -127,13 +126,15 @@ function ImageManager(containerId) {
     container.appendChild(canvas);
     log('canvas info: ', canvasW, canvasH)
 
-    const coordin = Coordin({
+    const userOffset = {
         x: container.offsetLeft,
         y: container.offsetTop,
-    })
+    };
+    const coordin = Coordin(userOffset);
+    log('canvas info: ', canvasW, canvasH, userOffset);
 
     let markId = 0;
-    const allMark = [];
+    let allMark = [];
     function saveMark(sType, mark) {
         mark.id = markId++;
         mark.type = sType;
@@ -281,11 +282,21 @@ function ImageManager(containerId) {
         return [...allMark];
     }
 
+    function updateMark(id, oInfo) {
+
+    }
+    function removeMark(id) {
+        allMark = allMark.filter(item => item.id !== id);
+    }
     return {
         load,
         zoomIn,
         zoomOut,
         getAllMark,
+        render: (oItem) => {
+            const mark = MarkTypes.find(item => item.name === oItem.type);
+            return mark ? mark.render({...oItem, updateMark, removeMark}) : null;
+        },
         ...MarkTypes.reduce((result, markType) => {
             const sMethod = 'plugin' + firstCapital(markType.name);
             const opt = {
@@ -293,7 +304,6 @@ function ImageManager(containerId) {
                 coordin,
                 draw,
                 saveMark: (info) => saveMark(markType.name, info),
-                showProperties,
             };
             result[sMethod] = (...params) => markType.create(...params, { ...opt, viewPort: { ...ViewPort } });
             return result;

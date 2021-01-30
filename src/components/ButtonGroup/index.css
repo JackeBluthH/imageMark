@@ -40,6 +40,11 @@
 .button-group > .btn:hover {
     background: #555555;
 }
+.button-group > .btn.disabled,
+.button-group > .btn.disabled:hover {
+    background: #888;
+    cursor: no-drop;
+}
 .button-group > .btn.active {
     background: #555555;
 }

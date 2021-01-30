@@ -24,6 +24,9 @@
     top: 50px;
     right: 0;
     bottom: 0;
+    width: 0;
+}
+.layout-helper.show {
     width: 200px;
     transition: cubic-bezier(0.23, 1, 0.320, 1);
 }

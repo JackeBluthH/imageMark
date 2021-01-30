@@ -42,10 +42,25 @@
     color: #ddd;
   }
 
+  /* form */
+  .custom-form .form-header {
+    position: relative;
+  }
+  .custom-form .form-body {
+    padding: 10px;
+  }
+  .custom-form .form-footer {
+    text-align: center;
+  }
   .custom-form .form-row {
     border-bottom: 1px solid #111;
   }
 
+  .custom-form .icon-close {
+    position: absolute;
+    right: 5px;
+    top: 0;
+  }
   .custom-form input {
     color: black;
   }

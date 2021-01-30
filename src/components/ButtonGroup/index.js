@@ -26,7 +26,11 @@ class RadioButton extends React.Component {
 
     render() {
         const { type, className } = this.props;
-        const getBtnClass = btn => getClasses('btn', this.state.btnName === btn.name ? 'active' : '');
+        const getBtnClass = btn => getClasses(
+            'btn', 
+            this.state.btnName === btn.name ? 'active' : '',
+            btn.disabled ? 'disabled' : '',
+            );
         return (
             <div className={getClasses('button-group', className, type)}>
                 {this.props.buttons.map(btn => (

@@ -22,19 +22,29 @@ class ImageMark extends React.Component {
             this.marker.load(testImg);
         }
 
-        
+
     }
 
     state = {
         endPort: null,
         markType: '',
         markInfo: [],
+
+        curMark: null,
     }
 
     imgId = null
     startPort = null
-    canvasId = `canval${Math.random()}`.replace('.', '');
-    moveObj = null;
+    canvasId = `canval${Math.random()}`.replace('.', '')
+    moveObj = null
+    marks = [{
+        id: 1,
+        type: 'rect',
+        x: 1,
+        y: 1,
+        width: 50,
+        height: 50,
+    }]
 
     setImgType = (sType) => {
         // this.markType = sType;
@@ -45,67 +55,98 @@ class ImageMark extends React.Component {
     end = () => {
         this.moveObj.end();
         this.moveObj = null;
-        this.setState({ markInfo: this.marker.getAllMark() });
+        this.setState({
+            curMark: null,
+            markInfo: this.marker.getAllMark(),
+        });
     }
+    
+    doImgMark2 = (e) => {
+        if (this.state.curMark) {
+            this.marks.push(this.state.curMark);
+            this.setState({ curMark: null });
+            this.moveObj = null;
+            return;
+        }
+
+        const curMark = {
+            id: this.marks.length + 1,
+            type: 'rect',
+            x: e.pageX,
+            y: e.pageY,
+            width: 0,
+            height: 0,
+        };
+        this.setState({ curMark });
+
+        this.moveObj = {
+            moveTo: ({ x, y }) => {
+                curMark.width = Math.abs(x - curMark.x);
+                curMark.height = Math.abs(y - curMark.y);
+                this.setState({ curMark });
+            }
+        }
+    }
+
     // action of click
-    doImgMark = (e) => {
+    onMouseDown = (e) => {
         if (e.isDefaultPrevented()) {
             return;
         }
-        
         console.log('doImgMark');
         const curPoint = { x: e.pageX, y: e.pageY };
+        const { marker } = this;
         const fn = ({
-            'zoomout': () => {
-                if (this.mouseDown === true) {
-                    this.mouseDown = false;
-                    this.marker.zoomOut(curPoint);
-                    return;
-                }
-                this.mouseDown = true;
-            },
-            'zoomin': () => {
-                if (this.mouseDown === true) {
-                    this.mouseDown = false;
-                    this.marker.zoomIn(curPoint)
-                    return;
-                }
-                this.mouseDown = true;
-            },
             'move': () => {
-                if (this.moveObj) {
-                    // move end
-                    this.end();
-                    return;
-                }
-
                 this.moveObj = this.marker.pluginMove(curPoint);
             },
             'rect': () => {
-                if (this.moveObj) {
-                    // move end
-                    this.end();
-                    return;
-                }
-
                 this.moveObj = this.marker.pluginRect(curPoint);
+                this.setState({ curMark: this.moveObj.getMark() });
             },
             'circle': () => {
-                if (this.moveObj) {
-                    // move end
-                    this.end();
-                    return;
-                }
-
                 this.moveObj = this.marker.pluginCircle(curPoint);
             },
         })[this.state.markType] || (() => { });
         fn();
     }
 
+    onMouseUp = (e) => {
+        if (e.isDefaultPrevented()) {
+            return;
+        }
+        const curPoint = { x: e.pageX, y: e.pageY };
+        const { marker } = this;
+        const fn = ({
+            'zoomout': () => {
+                marker.zoomOut(curPoint);
+            },
+            'zoomin': () => {
+                marker.zoomIn(curPoint)
+            },
+            'move': () => {
+                // move end
+                this.end();
+            },
+            'rect': () => {
+                // move end
+                this.end();
+            },
+            'circle': () => {
+                // move end
+                this.end();
+            },
+        })[this.state.markType] || (() => { });
+        fn();
+    }
+
     markMove = (e) => {
+        if (e.isDefaultPrevented()) {
+            return;
+        }
         if (this.moveObj) {
             this.moveObj.moveTo({ x: e.pageX, y: e.pageY });
+            this.setState({ curMark: this.moveObj.getMark() });
         }
     }
 
@@ -129,19 +170,23 @@ class ImageMark extends React.Component {
             { name: 'rect', text: 'Rect' },
         ];
         const actionBtn = [
-            { name: 'load', text: 'Load' },
-            { name: 'save', text: 'Save' },
-            { name: 'reset', text: 'Reset' },
+            { name: 'load', text: 'Load', disabled:true },
+            { name: 'save', text: 'Save', disabled:true },
+            { name: 'reset', text: 'Reset', disabled:true },
         ];
-        const renderPoint = (p) => {
-            return `(${parseInt(p.x)} x ${parseInt(p.y)})`;
-        }
 
         // 切换了图片
         if (match.params.id !== this.imgId && this.imgId) {
             this.imgId = match.params.id;
             this.marker.load(testImg);
         }
+
+        const markRender = (oItem) => {
+            if (!oItem) {
+                return null;
+            }
+            return this.marker.render(oItem);
+        };
 
         return (
             <div>
@@ -150,12 +195,13 @@ class ImageMark extends React.Component {
                     <ButtonGroup className="action-group" onClick={this.setImgType} buttons={toolBtn} type="radio" />
                     <ButtonGroup className="action-group" onClick={this.btnAction} buttons={actionBtn} />
                 </div>
-                <div className="image-container" onMouseDown={this.doImgMark} onMouseUp={this.doImgMark} onMouseMove={this.markMove} id={this.canvasId}>
-
+                <div className="image-container" onMouseDown={this.onMouseDown} onMouseUp={this.onMouseUp} onMouseMove={this.markMove} id={this.canvasId}>
+                    {this.state.markInfo.map(markRender)}
+                    {this.state.curMark && markRender({...this.state.curMark, drawing:true})}
                 </div>
                 <div>
                     {this.state.markInfo.map(mark => (
-                        <div key={mark.id}>{mark.id}. {mark.type} {renderPoint(mark.P1)} {renderPoint(mark.P2)}</div>
+                        <div key={mark.id}>{mark.id}. {mark.type} {mark.x},{mark.y}</div>
                     ))}
                 </div>
             </div>
