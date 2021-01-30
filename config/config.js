@@ -5,14 +5,15 @@ import defaultSettings from './defaultSettings';
 import proxy from './proxy';
 import routes from './router';
 
-function getProjectName() {
-  // __dirname = 'xxx/home/config
-  const a = __dirname.split(sep);
-  a.pop(); // config
-  return a.pop(); // projectName:home
-}
+// function getProjectName() {
+//   // __dirname = 'xxx/home/config
+//   const a = __dirname.split(sep);
+//   a.pop(); // config
+//   return a.pop(); // projectName:home
+// }
 
-const projectName = getProjectName();
+// const projectName = getProjectName();
+
 const { REACT_APP_ENV } = process.env;
 export default defineConfig({
   hash: true,
@@ -20,7 +21,7 @@ export default defineConfig({
   dva: {
     hmr: true,
   },
-  publicPath: `/${projectName}/`,
+  publicPath: '/',
   devtool: 'cheap-module-eval-source-map',
   locale: {
     // default zh-CN
@@ -46,7 +47,7 @@ export default defineConfig({
   title: false,
   ignoreMomentLocale: true,
   proxy: proxy[REACT_APP_ENV || 'dev'],
-  outputPath: `../dist/${projectName}`,
+  outputPath: './dist',
   manifest: {
     basePath: '/',
   },

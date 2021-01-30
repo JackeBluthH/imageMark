@@ -4,8 +4,6 @@ import ButtonGroup from '@/components/ButtonGroup';
 import MarkManager from '@/components/MarkManager';
 // import svg from '@/utils/svg';
 
-import testImg from './test.jpg';
-
 // import styles from './index.less';
 import './index.less';
 
@@ -19,13 +17,13 @@ import './index.less';
 //         margin:0 auto;
 //     }
 // </style>
-const createSVG = function (div) {
-    svg(div)
-        .line(100, 100, 390, 200, 'red')
-        .line(100, 100, 390, 200, 'transparent', 10)
-        .rect(235, 140, 255, 160, '#2995ff', 5)
-        .text(245, 155, '?', 'white')
-}
+// const createSVG = function (div) {
+//     svg(div)
+//         .line(100, 100, 390, 200, 'red')
+//         .line(100, 100, 390, 200, 'transparent', 10)
+//         .rect(235, 140, 255, 160, '#2995ff', 5)
+//         .text(245, 155, '?', 'white')
+// }
 
 class ImageMark extends React.Component {
     componentDidMount() {
@@ -33,10 +31,8 @@ class ImageMark extends React.Component {
         this.marker = MarkManager(this.canvasId);
 
         if (match.params.id) {
-            // this.marker.load(match.params.id);
-            console.log(match.params.id);
             this.imgId = match.params.id;
-            this.marker.load(testImg);
+            this.marker.load(`/images/${this.imgId}.jpg`);
         }
 
         // createSVG(document.getElementById(this.canvasId));
@@ -207,8 +203,10 @@ class ImageMark extends React.Component {
                     <ButtonGroup className="action-group" onClick={this.btnAction} buttons={actionBtn} />
                 </div>
                 <div className="image-container" onMouseDown={this.onMouseDown} onMouseUp={this.onMouseUp} onMouseMove={this.markMove} id={this.canvasId}>
-                    {markInfo.map(markRender)}
-                    {this.state.curMark && markRender({ ...this.state.curMark, drawing: true })}
+                    <svg xmlns="svgNS" width="100%" height="100%" className="mark-rect">
+                        {markInfo.map(markRender)}
+                        {this.state.curMark && markRender({ ...this.state.curMark, drawing: true })}
+                    </svg>
                 </div>
                 <div>
                     {markData.map(mark => (
