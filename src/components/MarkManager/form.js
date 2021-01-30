@@ -3,10 +3,10 @@ import ReactDOM from 'react-dom';
 
 const FormItem = {
     text: item => (
-        <input name={item.name} readOnly value={item.value}/>
+        <input name={item.name} readOnly value={item.value} />
     ),
     input: item => (
-        <input name={item.name} value={item.value}/>
+        <input name={item.name} value={item.value} />
     ),
     select: item => {
         <select name={item.name} value={item.value}>
@@ -15,11 +15,11 @@ const FormItem = {
     }
 };
 
-function CustomForm({name, title, items, ...params}) {
+function CustomForm({ name, title, items, ...params }) {
     function getFormValue() {
         const values = {};
         const form = document.forms[name];
-        for(let i = 0; i < form.length; i++) {
+        for (let i = 0; i < form.length; i++) {
             const ele = form[i];
             if (ele.name) {
                 values[ele.name] = ele.value;
@@ -46,15 +46,15 @@ function CustomForm({name, title, items, ...params}) {
             </div>
             <div className="form-body">
                 {items.map(item => (
-                    <div className="form-row">
-                    <div className="form-label">{item.label}</div>
-                    <div className="form-item">{FormItem[item.type](item)}</div>
-                </div>
+                    <div key={item.label} className="form-row">
+                        <div className="form-label">{item.label}</div>
+                        <div className="form-item">{FormItem[item.type](item)}</div>
+                    </div>
                 ))}
             </div>
             <div className="form-footer">
-                <input type="submit" onClick={onApply} value="Apply"/>
-                <input type="button" onClick={onCancel} value="Cancel"/>
+                <input type="submit" onClick={onApply} value="Apply" />
+                <input type="button" onClick={onCancel} value="Cancel" />
             </div>
         </form>
     )
@@ -88,8 +88,8 @@ function $(selector) {
         },
         removeClass: (classes) => {
             const aRemoved = classes.split(' ').filter(s => !!s);
-            const aCurCls = (ele.className||'').split(' ').filter(s => !!s);
-            ele.className = aCurCls.filter(s => !aRemoved.some(rs => rs===s)).join(' ');
+            const aCurCls = (ele.className || '').split(' ').filter(s => !!s);
+            ele.className = aCurCls.filter(s => !aRemoved.some(rs => rs === s)).join(' ');
             return this;
         }
     }
@@ -129,7 +129,7 @@ function showProperties(params) {
     };
 
     FormInstance = oProps;
-    ReactDOM.render(<CustomForm {...oProps}/>, div);
+    ReactDOM.render(<CustomForm {...oProps} />, div);
 }
 
 export default showProperties;

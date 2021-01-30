@@ -39,8 +39,8 @@ function firstCapital(str) {
  * 坐标系分为三种：
  * 屏幕坐标系：screenCoordin， 对应UI中的鼠标位置，原点在DIV的左上角
  * 画布坐标西：cavasCoordin, 对应画布中的位置，原点在画布的左上角
- * 用户坐标系：userCoordin, 对应图片中的位置，原点在图片的左上角
- * 在缩放移动过程中，用户坐标系中的坐标点的值不会改变
+ * 图片坐标系：imageCoordin, 对应图片中的位置，原点在图片的左上角
+ * 标注框在图片坐标系中的坐标值不随图片的缩放移动而改变，但在画布坐标系中会改变
  * @param {Point} originPoint 画布坐标系原点位置
  */
 function Coordin(originPoint) {
@@ -63,6 +63,7 @@ function Coordin(originPoint) {
         },
 
         setUserOrigin: function (p) {
+            console.log('setUserOrigin:', p);
             UserOirgin = { ...UserOirgin, ...p };
         },
 
@@ -79,18 +80,18 @@ function Coordin(originPoint) {
             };
         },
 
-        // 转化画布坐标为用户坐标。用户坐标的原点在图片的左上角
-        canvas2User: function (canvasPort) {
-            console.log('canvas2User:', canvasPort);
+        // 转化画布坐标为图片坐标。图片坐标的原点在图片的左上角
+        canvas2Image: function (canvasPort) {
+            console.log('canvas2Image:', canvasPort);
             return {
                 x: getNumber((canvasPort.x - UserOirgin.x) / nCurZoom),
                 y: getNumber((canvasPort.y - UserOirgin.y) / nCurZoom),
             }
         },
 
-        // 转化用户坐标为画布坐标。
-        user2Canvas: function (userPort) {
-            console.log('user2Canvas:', userPort);
+        // 转化图片坐标为画布坐标。
+        image2Canvas: function (userPort) {
+            console.log('image2Canvas:', userPort);
             return {
                 x: getNumber((userPort.x * nCurZoom + UserOirgin.x)),
                 y: getNumber((userPort.y * nCurZoom + UserOirgin.y)),
@@ -126,18 +127,22 @@ function ImageManager(containerId) {
     container.appendChild(canvas);
     log('canvas info: ', canvasW, canvasH)
 
-    const userOffset = {
+    const canvasOffset = {
         x: container.offsetLeft,
         y: container.offsetTop,
     };
-    const coordin = Coordin(userOffset);
-    log('canvas info: ', canvasW, canvasH, userOffset);
+    const coordin = Coordin(canvasOffset);
+    log('canvas info: ', canvasW, canvasH, canvasOffset);
 
     let markId = 0;
     let allMark = [];
     function saveMark(sType, mark) {
         mark.id = markId++;
         mark.type = sType;
+
+        // 使用图片坐标值保存标注点
+        mark.points = mark.points.map(p => coordin.canvas2Image(p));
+
         allMark.push(mark);
         return mark.id;
     }
@@ -148,8 +153,8 @@ function ImageManager(containerId) {
     }
 
     function drawRuler(x, y, lineWidth) {
-        while(x < canvasW) {
-            line({x,y}, {x, y:10});
+        while (x < canvasW) {
+            line({ x, y }, { x, y: 10 });
             ctx.lineWidth = lineWidth;
             x += 100;
         }
@@ -159,11 +164,11 @@ function ImageManager(containerId) {
         ctx.beginPath();
 
         // top line
-        line({x:0,y:5}, {x:canvasW, y:5});
+        line({ x: 0, y: 5 }, { x: canvasW, y: 5 });
 
         // middle H line
-        line({x:10,y:canvasH/2}, {x:canvasW-10, y:canvasH/2});
-        line({x:canvasW/2,y:10}, {x:canvasW/2, y:canvasH-10});
+        line({ x: 10, y: canvasH / 2 }, { x: canvasW - 10, y: canvasH / 2 });
+        line({ x: canvasW / 2, y: 10 }, { x: canvasW / 2, y: canvasH - 10 });
 
         drawRuler(55, 5, 1);
         ctx.stroke();
@@ -224,16 +229,16 @@ function ImageManager(containerId) {
     // 更新缩放比例后需要重绘所有的标注框
     function setZoom(nZoom, centerPoint) {
         const canvasP0 = coordin.transCanvasPort(centerPoint);
-        const userP = coordin.canvas2User(canvasP0);
+        const userP = coordin.canvas2Image(canvasP0);
         log('before zoom: ', canvasP0);
         log('user point: ', userP);
 
         // move to center
         // move2Center(centerPoint);
 
-        // zoom, 缩放前后userP在用户坐标系中的坐标不会改变
+        // zoom, 缩放前后userP在图片坐标系中的坐标不会改变
         coordin.setZoom(nZoom);
-        const canvasP1 = coordin.user2Canvas(userP);
+        const canvasP1 = coordin.image2Canvas(userP);
         move2Center(canvasP1);
 
         ViewPort.width = coordin.transLengh(oCurImg.naturalWidth);
@@ -278,8 +283,17 @@ function ImageManager(containerId) {
         });
     }
 
-    function getAllMark() {
-        return [...allMark];
+    function getAllMark(type = 'render') {
+        const TransType = {
+            render: p => coordin.image2Canvas(p),
+            save: p => p,
+        };
+        const fnTrans = TransType[type];
+
+        return allMark.map(({ points, ...mark }) => ({
+            ...mark,
+            points: points.map(fnTrans),
+        }));
     }
 
     function updateMark(id, oInfo) {
@@ -295,7 +309,7 @@ function ImageManager(containerId) {
         getAllMark,
         render: (oItem) => {
             const mark = MarkTypes.find(item => item.name === oItem.type);
-            return mark ? mark.render({...oItem, updateMark, removeMark}) : null;
+            return mark ? mark.render({ ...oItem, updateMark, removeMark }) : null;
         },
         ...MarkTypes.reduce((result, markType) => {
             const sMethod = 'plugin' + firstCapital(markType.name);

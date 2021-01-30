@@ -2,6 +2,7 @@ import React from 'react';
 
 import ButtonGroup from '@/components/ButtonGroup';
 import MarkManager from '@/components/MarkManager';
+// import svg from '@/utils/svg';
 
 import testImg from './test.jpg';
 
@@ -9,6 +10,22 @@ import testImg from './test.jpg';
 import './index.less';
 
 // const testImg = '/assets/test.jpg';
+
+
+// <style>
+//     .box{
+//         width:780px;
+//         height:400px;
+//         margin:0 auto;
+//     }
+// </style>
+const createSVG = function (div) {
+    svg(div)
+        .line(100, 100, 390, 200, 'red')
+        .line(100, 100, 390, 200, 'transparent', 10)
+        .rect(235, 140, 255, 160, '#2995ff', 5)
+        .text(245, 155, '?', 'white')
+}
 
 class ImageMark extends React.Component {
     componentDidMount() {
@@ -22,13 +39,13 @@ class ImageMark extends React.Component {
             this.marker.load(testImg);
         }
 
-
+        // createSVG(document.getElementById(this.canvasId));
     }
 
     state = {
         endPort: null,
         markType: '',
-        markInfo: [],
+
 
         curMark: null,
     }
@@ -57,10 +74,10 @@ class ImageMark extends React.Component {
         this.moveObj = null;
         this.setState({
             curMark: null,
-            markInfo: this.marker.getAllMark(),
+
         });
     }
-    
+
     doImgMark2 = (e) => {
         if (this.state.curMark) {
             this.marks.push(this.state.curMark);
@@ -118,26 +135,14 @@ class ImageMark extends React.Component {
         const curPoint = { x: e.pageX, y: e.pageY };
         const { marker } = this;
         const fn = ({
-            'zoomout': () => {
-                marker.zoomOut(curPoint);
-            },
-            'zoomin': () => {
-                marker.zoomIn(curPoint)
-            },
-            'move': () => {
-                // move end
-                this.end();
-            },
-            'rect': () => {
-                // move end
-                this.end();
-            },
-            'circle': () => {
-                // move end
-                this.end();
-            },
+            'zoomout': () => marker.zoomOut(curPoint),
+            'zoomin': () => marker.zoomIn(curPoint),
+            'move': () => this.end(),
+            'rect': () => this.end(),
+            'circle': () => this.end(),
         })[this.state.markType] || (() => { });
         fn();
+        this.setState({});
     }
 
     markMove = (e) => {
@@ -170,9 +175,9 @@ class ImageMark extends React.Component {
             { name: 'rect', text: 'Rect' },
         ];
         const actionBtn = [
-            { name: 'load', text: 'Load', disabled:true },
-            { name: 'save', text: 'Save', disabled:true },
-            { name: 'reset', text: 'Reset', disabled:true },
+            { name: 'load', text: 'Load', disabled: true },
+            { name: 'save', text: 'Save', disabled: true },
+            { name: 'reset', text: 'Reset', disabled: true },
         ];
 
         // 切换了图片
@@ -188,6 +193,12 @@ class ImageMark extends React.Component {
             return this.marker.render(oItem);
         };
 
+        let markData = [];
+        let markInfo = [];
+        if (this.marker) {
+            markData = this.marker.getAllMark('save');
+            markInfo = this.marker.getAllMark();
+        }
         return (
             <div>
                 <div className="page-title">Mark: {this.state.markType}</div>
@@ -196,12 +207,12 @@ class ImageMark extends React.Component {
                     <ButtonGroup className="action-group" onClick={this.btnAction} buttons={actionBtn} />
                 </div>
                 <div className="image-container" onMouseDown={this.onMouseDown} onMouseUp={this.onMouseUp} onMouseMove={this.markMove} id={this.canvasId}>
-                    {this.state.markInfo.map(markRender)}
-                    {this.state.curMark && markRender({...this.state.curMark, drawing:true})}
+                    {markInfo.map(markRender)}
+                    {this.state.curMark && markRender({ ...this.state.curMark, drawing: true })}
                 </div>
                 <div>
-                    {this.state.markInfo.map(mark => (
-                        <div key={mark.id}>{mark.id}. {mark.type} {mark.x},{mark.y}</div>
+                    {markData.map(mark => (
+                        <div key={mark.id}>{mark.id}. {mark.type} {mark.points.map(p => <span key={p.x + p.y}>({p.x}x{p.y}), </span>)}</div>
                     ))}
                 </div>
             </div>
