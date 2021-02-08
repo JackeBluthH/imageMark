@@ -2,28 +2,13 @@ import React from 'react';
 
 import ButtonGroup from '@/components/ButtonGroup';
 import MarkManager from '@/components/MarkManager';
-// import svg from '@/utils/svg';
+import logger from '@/utils/log';
 
 // import styles from './index.less';
 import './index.less';
 
 // const testImg = '/assets/test.jpg';
-
-
-// <style>
-//     .box{
-//         width:780px;
-//         height:400px;
-//         margin:0 auto;
-//     }
-// </style>
-// const createSVG = function (div) {
-//     svg(div)
-//         .line(100, 100, 390, 200, 'red')
-//         .line(100, 100, 390, 200, 'transparent', 10)
-//         .rect(235, 140, 255, 160, '#2995ff', 5)
-//         .text(245, 155, '?', 'white')
-// }
+const log = logger('markPage');
 
 class ImageMark extends React.Component {
     componentDidMount() {
@@ -41,7 +26,6 @@ class ImageMark extends React.Component {
     state = {
         endPort: null,
         markType: '',
-
 
         curMark: null,
     }
@@ -61,44 +45,17 @@ class ImageMark extends React.Component {
 
     setImgType = (sType) => {
         // this.markType = sType;
-        console.log('setImgType', sType);
+        log.debug('setImgType', sType);
         this.setState({ markType: sType });
     }
 
     end = () => {
-        this.moveObj.end();
-        this.moveObj = null;
-        this.setState({
-            curMark: null,
-
-        });
-    }
-
-    doImgMark2 = (e) => {
-        if (this.state.curMark) {
-            this.marks.push(this.state.curMark);
-            this.setState({ curMark: null });
-            this.moveObj = null;
+        if (!this.moveObj) {
             return;
         }
-
-        const curMark = {
-            id: this.marks.length + 1,
-            type: 'rect',
-            x: e.pageX,
-            y: e.pageY,
-            width: 0,
-            height: 0,
-        };
-        this.setState({ curMark });
-
-        this.moveObj = {
-            moveTo: ({ x, y }) => {
-                curMark.width = Math.abs(x - curMark.x);
-                curMark.height = Math.abs(y - curMark.y);
-                this.setState({ curMark });
-            }
-        }
+        this.moveObj.end();
+        this.moveObj = null;
+        this.setState({curMark: null});
     }
 
     // action of click
@@ -106,21 +63,37 @@ class ImageMark extends React.Component {
         if (e.isDefaultPrevented()) {
             return;
         }
-        console.log('doImgMark');
+
         const curPoint = { x: e.pageX, y: e.pageY };
         const { marker } = this;
-        const fn = ({
-            'move': () => {
+
+        if (marker.trigger('mousedown', curPoint)) {
+            log.debug('attached mousedown');
+            return;
+        }
+
+        const actions = {
+            move: () => {
                 this.moveObj = this.marker.pluginMove(curPoint);
             },
-            'rect': () => {
+            rect: () => {
                 this.moveObj = this.marker.pluginRect(curPoint);
-                this.setState({ curMark: this.moveObj.getMark() });
+                // this.setState({ curMark: this.moveObj.getMark() });
             },
-            'circle': () => {
+            circle: () => {
                 this.moveObj = this.marker.pluginCircle(curPoint);
             },
-        })[this.state.markType] || (() => { });
+            markDrag: () => {
+                
+                // dragObj.map(obj => log.debug(obj.attach))
+            },
+            markResize: () => {
+                // 
+                // const dragObj = marker.attachMarks(curPoint);
+            },
+            _: () => (0),
+        };
+        const fn = actions[this.state.markType] || actions._;
         fn();
     }
 
@@ -128,17 +101,30 @@ class ImageMark extends React.Component {
         if (e.isDefaultPrevented()) {
             return;
         }
+
         const curPoint = { x: e.pageX, y: e.pageY };
         const { marker } = this;
-        const fn = ({
-            'zoomout': () => marker.zoomOut(curPoint),
-            'zoomin': () => marker.zoomIn(curPoint),
-            'move': () => this.end(),
-            'rect': () => this.end(),
-            'circle': () => this.end(),
-        })[this.state.markType] || (() => { });
-        fn();
-        this.setState({});
+
+        if (marker.trigger('mouseup', curPoint)) {
+            log.debug('attached mouseup');
+            return;
+        }
+
+        const fnAction = ({
+            zoomout: () => marker.zoomOut(curPoint),
+            zoomin: () => marker.zoomIn(curPoint),
+            zoomOrigin: () => marker.zoomOrigin(curPoint),
+            move: () => this.end(),
+            rect: () => this.end(),
+            circle: () => this.end(),
+            marks: () => {
+
+            }
+        })[this.state.markType];
+        if (fnAction) {
+            fnAction();
+            this.setState({});
+        }
     }
 
     markMove = (e) => {
@@ -168,6 +154,7 @@ class ImageMark extends React.Component {
             { name: 'move', text: 'Move' },
             { name: 'zoomin', text: 'ZoomIn' },
             { name: 'zoomout', text: 'ZoomOut' },
+            { name: 'zoomOrigin', text: '1:1' },
             { name: 'rect', text: 'Rect' },
         ];
         const actionBtn = [

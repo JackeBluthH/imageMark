@@ -1,4 +1,6 @@
 
+import logger from '@/utils/log';
+
 import pluginMove from './markType/move';
 import markRect from './markType/rect';
 import markCircle from './markType/circle';
@@ -11,9 +13,7 @@ const MarkTypes = [
     markCircle,
 ];
 
-function log(...args) {
-    console.log(...args);
-}
+const log = logger('MarkManager');
 
 function loadImage(src, onReady) {
     let oImg = new Image();
@@ -59,11 +59,11 @@ function Coordin(originPoint) {
         // 设置缩放比例
         setZoom: function (nZoom) {
             nCurZoom = getNumber(nZoom);
-            console.log('setZoom:', nCurZoom);
+            log.debug('setZoom:', nCurZoom);
         },
 
         setUserOrigin: function (p) {
-            console.log('setUserOrigin:', p);
+            log.debug('setUserOrigin:', p);
             UserOirgin = { ...UserOirgin, ...p };
         },
 
@@ -82,19 +82,19 @@ function Coordin(originPoint) {
 
         // 转化画布坐标为图片坐标。图片坐标的原点在图片的左上角
         canvas2Image: function (canvasPort) {
-            console.log('canvas2Image:', canvasPort);
+            // console.log('canvas2Image:', canvasPort);
             return {
-                x: getNumber((canvasPort.x - UserOirgin.x) / nCurZoom),
-                y: getNumber((canvasPort.y - UserOirgin.y) / nCurZoom),
+                x: (canvasPort.x - UserOirgin.x) / nCurZoom,
+                y: (canvasPort.y - UserOirgin.y) / nCurZoom,
             }
         },
 
         // 转化图片坐标为画布坐标。
         image2Canvas: function (userPort) {
-            console.log('image2Canvas:', userPort);
+            // console.log('image2Canvas:', userPort);
             return {
-                x: getNumber((userPort.x * nCurZoom + UserOirgin.x)),
-                y: getNumber((userPort.y * nCurZoom + UserOirgin.y)),
+                x: (userPort.x * nCurZoom + UserOirgin.x),
+                y: (userPort.y * nCurZoom + UserOirgin.y),
             }
         },
     }
@@ -125,14 +125,14 @@ function ImageManager(containerId) {
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 1;
     container.appendChild(canvas);
-    log('canvas info: ', canvasW, canvasH)
+    log.debug('canvas info: ', canvasW, canvasH)
 
     const canvasOffset = {
         x: container.offsetLeft,
         y: container.offsetTop,
     };
     const coordin = Coordin(canvasOffset);
-    log('canvas info: ', canvasW, canvasH, canvasOffset);
+    log.debug('canvas info: ', canvasW, canvasH, canvasOffset);
 
     let markId = 0;
     let allMark = [];
@@ -187,7 +187,7 @@ function ImageManager(containerId) {
         }
 
         // draw image
-        log('draw:', ViewPort);
+        log.debug('draw:', ViewPort);
         ctx.drawImage(oCurImg, ViewPort.x, ViewPort.y, ViewPort.width, ViewPort.height);
         coordin.setUserOrigin({ x: ViewPort.x, y: ViewPort.y });
 
@@ -230,8 +230,8 @@ function ImageManager(containerId) {
     function setZoom(nZoom, centerPoint) {
         const canvasP0 = coordin.transCanvasPort(centerPoint);
         const userP = coordin.canvas2Image(canvasP0);
-        log('before zoom: ', canvasP0);
-        log('user point: ', userP);
+        log.debug('before zoom: ', canvasP0);
+        log.debug('user point: ', userP);
 
         // move to center
         // move2Center(centerPoint);
@@ -243,7 +243,7 @@ function ImageManager(containerId) {
 
         ViewPort.width = coordin.transLengh(oCurImg.naturalWidth);
         ViewPort.height = coordin.transLengh(oCurImg.naturalHeight);
-        log('after zoom: ', canvasP1, ViewPort);
+        log.debug('after zoom: ', canvasP1, ViewPort);
 
         // 自动调整位置，避免出现空白
         autoMove();
@@ -261,9 +261,16 @@ function ImageManager(containerId) {
         draw();
     }
 
+    // 设置为原始大小
+    function zoomOrigin(centerPoint) {
+        setZoom(1, centerPoint);
+        draw();
+    }
+
     // 创建图片
     // const src = 'http://pblesaqy5.bkt.clouddn.com/18-7-27/52991435.jpg';
     function load(sImg) {
+        ctx.fillText(`Loading ${sImg}`, 300, 100);
         loadImage(sImg, (oImg) => {
             const nZoom = Math.min(canvasW / oImg.naturalWidth, canvasH / oImg.naturalHeight);
 
@@ -297,29 +304,93 @@ function ImageManager(containerId) {
     }
 
     function updateMark(id, oInfo) {
+        const curMark = allMark.find(item => item.id === id);
+        if (!curMark) {
+            return 0;
+        }
 
+        // id不支持修改
+        const { id: oldId, ...attrs } = oInfo;
+        Object.assign(curMark, attrs);
+        return 1;
     }
+
+    // 根据屏幕上的一个点获取包含该点的所有标注对象
+    function attachMarks(screenPoint) {
+        const canvasPoint = coordin.transCanvasPort(screenPoint);
+        // const imagePoint = coordin.canvas2Image(canvasPoint);
+        return allMark.map((mark) => {
+            const markType = MarkTypes.find(mt => mt.name === mark.type);
+            if (!markType) {
+                // exception
+                return null;
+            }
+
+            const attach = markType.attach(canvasPoint, mark, coordin);
+            if (!attach) {
+                return null;
+            }
+
+            return {mark, attach};
+        }).filter(item => !!item);
+        // console.log('attachMarks: ', marks);
+    }
+
+    function trigger(sName, screenPoint) {
+        const canvasPoint = coordin.transCanvasPort(screenPoint);
+        // const imagePoint = coordin.canvas2Image(canvasPoint);
+        return allMark.some((mark) => {
+            const markType = markTypes.find(mt => mt.name === mark.type);
+            if (!markType) {
+                // exception
+                log.error('unkown type:', mark.type);
+                return false;
+            }
+
+            if (!markType.trigger) {
+                log.debug('no trigger:', mark.type);
+                return false;
+            }
+
+            const attach = markType.attach(canvasPoint, mark);
+            if (!attach) {
+                log.debug('no attached');
+                return false;
+            }
+
+            log.debug('attached:', attach.name);
+            return !markType.trigger([attach.name, firstCapital(sName)].join(''), mark);
+        });
+    }
+
     function removeMark(id) {
         allMark = allMark.filter(item => item.id !== id);
     }
+
+    const markTypes = MarkTypes.map(({factor, ...markType}) => ({
+        ...markType,
+        ...factor({
+            container,
+            coordin,
+            draw,
+            saveMark: info => saveMark(markType.name, info),
+        }),
+    }));
     return {
         load,
         zoomIn,
         zoomOut,
+        zoomOrigin,
         getAllMark,
+        // attachMarks,
+        trigger,
         render: (oItem) => {
-            const mark = MarkTypes.find(item => item.name === oItem.type);
-            return mark ? mark.render({ ...oItem, updateMark, removeMark }) : null;
+            const markType = markTypes.find(item => item.name === oItem.type);
+            return markType ? markType.render({ ...oItem, updateMark, removeMark }) : null;
         },
-        ...MarkTypes.reduce((result, markType) => {
+        ...markTypes.reduce((result, markType) => {
             const sMethod = 'plugin' + firstCapital(markType.name);
-            const opt = {
-                container,
-                coordin,
-                draw,
-                saveMark: (info) => saveMark(markType.name, info),
-            };
-            result[sMethod] = (...params) => markType.create(...params, { ...opt, viewPort: { ...ViewPort } });
+            result[sMethod] = (...params) => markType.create(...params, { viewPort: { ...ViewPort } });
             return result;
         }, {}),
     };
