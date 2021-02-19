@@ -271,6 +271,11 @@ function ImageManager(containerId) {
     // const src = 'http://pblesaqy5.bkt.clouddn.com/18-7-27/52991435.jpg';
     function load(sImg) {
         ctx.fillText(`Loading ${sImg}`, 300, 100);
+
+        // reset
+        markId = 0;
+        allMark = [];
+
         loadImage(sImg, (oImg) => {
             const nZoom = Math.min(canvasW / oImg.naturalWidth, canvasH / oImg.naturalHeight);
 
@@ -374,6 +379,8 @@ function ImageManager(containerId) {
             coordin,
             draw,
             saveMark: info => saveMark(markType.name, info),
+            removeMark,
+            updateMark,
         }),
     }));
     return {
@@ -386,7 +393,7 @@ function ImageManager(containerId) {
         trigger,
         render: (oItem) => {
             const markType = markTypes.find(item => item.name === oItem.type);
-            return markType ? markType.render({ ...oItem, updateMark, removeMark }) : null;
+            return markType ? markType.render({ ...oItem }) : null;
         },
         ...markTypes.reduce((result, markType) => {
             const sMethod = 'plugin' + firstCapital(markType.name);

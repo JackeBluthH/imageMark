@@ -89,8 +89,8 @@ function getCloseBox(p1, p2) {
     };
 }
 
-function factor({ coordin, saveMark }) {
-    const RenderSvg = function ({ id, points, drawing, removeMark }) {
+function factor({ coordin, saveMark, removeMark, updateMark }) {
+    const RenderSvg = function ({ points, drawing }) {
         const [p1, p2] = points;
         if (!p2) {
             return null;
@@ -191,13 +191,13 @@ function factor({ coordin, saveMark }) {
     myEvent.on('closeBtnMousedown', (mark) => {
         // remove the mark
         log.debug('close:', mark);
-        return false;
+        removeMark(mark.id);
     }).on('bodyMouseup', (mark) => {
         showPropertyPanel(mark);
         return false;
     });
 
-    // 根据一个点捕获对应的标注对象，并返回具体的标注位置
+    // 根据一个点捕获对应的标注对象，并返回具体的标注位置名称，可用于绑定处理事件
     // 标注对象子类为：body, title, closeBtn
     function attach(point, mark,) {
         // const [p1, p2] = mark.points;

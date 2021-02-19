@@ -6,7 +6,7 @@ const FormItem = {
         <input name={item.name} readOnly value={item.value} />
     ),
     input: item => (
-        <input name={item.name} value={item.value} />
+        <input name={item.name} defaultValue={item.value} />
     ),
     select: item => {
         <select name={item.name} value={item.value}>

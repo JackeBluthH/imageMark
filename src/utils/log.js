@@ -11,7 +11,8 @@ function showLog(isShow, ...msg) {
     }
 
     const t = new Date();
-    console.log(t, ...msg);
+    const options = {year: "numeric", month: "long", day: "numeric", hour12:true, hour: 'numeric', minute: 'numeric', second: 'numeric'};
+    console.log(t.toLocaleString('zh', options), ...msg);
 }
 
 function log(sModule) {

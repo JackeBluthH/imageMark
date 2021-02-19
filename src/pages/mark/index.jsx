@@ -16,8 +16,7 @@ class ImageMark extends React.Component {
         this.marker = MarkManager(this.canvasId);
 
         if (match.params.id) {
-            this.imgId = match.params.id;
-            this.marker.load(`/images/${this.imgId}.jpg`);
+            this.changeImage(match.params.id);
         }
 
         // createSVG(document.getElementById(this.canvasId));
@@ -42,6 +41,11 @@ class ImageMark extends React.Component {
         width: 50,
         height: 50,
     }]
+
+    changeImage = (sImgId) => {
+        this.imgId = sImgId;
+        this.marker.load(`/images/${this.imgId}.jpg`);
+    }
 
     setImgType = (sType) => {
         // this.markType = sType;
@@ -165,8 +169,7 @@ class ImageMark extends React.Component {
 
         // 切换了图片
         if (match.params.id !== this.imgId && this.imgId) {
-            this.imgId = match.params.id;
-            this.marker.load(testImg);
+            this.changeImage(match.params.id);
         }
 
         const markRender = (oItem) => {
@@ -184,7 +187,7 @@ class ImageMark extends React.Component {
         }
         return (
             <div>
-                <div className="page-title">Mark: {this.state.markType}</div>
+                {/* <div className="page-title">Mark: {this.state.markType}</div> */}
                 <div>
                     <ButtonGroup className="action-group" onClick={this.setImgType} buttons={toolBtn} type="radio" />
                     <ButtonGroup className="action-group" onClick={this.btnAction} buttons={actionBtn} />
@@ -197,7 +200,7 @@ class ImageMark extends React.Component {
                 </div>
                 <div>
                     {markData.map(mark => (
-                        <div key={mark.id}>{mark.id}. {mark.type} {mark.points.map(p => <span key={p.x + p.y}>({p.x}x{p.y}), </span>)}</div>
+                        <div key={mark.id}>{mark.id}. {mark.type} {mark.points.map(p => <span key={p.x + p.y}>({p.x.toFixed(2)}x{p.y.toFixed(2)}), </span>)}</div>
                     ))}
                 </div>
             </div>
