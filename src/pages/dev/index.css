@@ -1,0 +1,11 @@
+.api-card {
+    padding: 10px 20px;
+}
+
+.api-card .desc {
+    color: #666;
+}
+
+.api-card .question {
+    color: red;
+}

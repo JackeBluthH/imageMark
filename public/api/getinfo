@@ -1,0 +1,21 @@
+{
+    "code": 200,
+    "data": {
+        "project": "demo",
+        "optype": "[obj recog/face identify], 前一个是从图片里标注物体；后一个是给两张图片，判断是否是一个类别，或者一个人",
+        "pictures": [
+            {
+                "path": "test.jpg",
+                "size_w": 1920,
+                "size_h": 1080
+            },
+            {
+                "path": "123.jpg",
+                "size_w": 1920,
+                "size_h": 1080
+            }
+        ],
+        "objnum": "number, #default is 0,  optype=’obj recog‘ 有效",
+        "same": "number, #default is -1, optype=’face identify‘ 有效"
+    }
+}

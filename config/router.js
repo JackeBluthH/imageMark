@@ -17,8 +17,13 @@ const routes = [
       },
       {
         name: 'task',
-        path: '/task',
-        component: './Task',
+        path: '/dev/task',
+        component: './dev/Task',
+      },
+      {
+        name: 'api',
+        path: '/dev/api',
+        component: './dev/API',
       },
     ],
   },

@@ -259,6 +259,16 @@ function factor({ coordin, saveMark, removeMark, updateMark }) {
         log.debug('show panel:', mark.id);
         showPropertyPanel(mark);
         // return false;
+    }).on('wsResize', (mark) => {
+        // 西南 右下角
+    }).on('esResize', (mark) => {
+        // 东南 左下角
+    }).on('eResize', (mark) => {
+        // 东 右边
+    }).on('wResize', (mark) => {
+        // 西 左边
+    }).on('sResize', (mark) => {
+        // 南 下边
     });
 
     // 根据一个点捕获对应的标注对象，并返回具体的标注位置名称，可用于绑定处理事件
@@ -278,6 +288,8 @@ function factor({ coordin, saveMark, removeMark, updateMark }) {
         let sAttachName = 'body';
         if (inBox(point, getCloseBox(p1, p2))) {
             sAttachName = 'closeBtn';
+        } else {
+            // sAttachName = 'e'; // w, s, ws, es
         }
 
         log.debug('attached', sAttachName, p1, p2, point);

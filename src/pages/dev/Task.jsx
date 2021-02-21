@@ -3,7 +3,7 @@ import React from 'react';
 
 function MyTask() {
     return (
-        <div>
+        <div className="page-content">
             <h3>启动跟踪事项服务</h3>
             <ol>
                 <li>cd /opt/nodeServer</li>

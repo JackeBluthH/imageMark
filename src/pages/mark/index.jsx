@@ -3,6 +3,7 @@ import React from 'react';
 import ButtonGroup from '@/components/ButtonGroup';
 import MarkManager from '@/components/MarkManager';
 import logger from '@/utils/log';
+import request from '@/utils/request';
 
 // import styles from './index.less';
 import './index.less';
@@ -18,8 +19,6 @@ class ImageMark extends React.Component {
         if (match.params.id) {
             this.changeImage(match.params.id);
         }
-
-        // createSVG(document.getElementById(this.canvasId));
     }
 
     state = {
@@ -43,8 +42,10 @@ class ImageMark extends React.Component {
     }]
 
     changeImage = (sImgId) => {
+        // const sImg = `/api/getimg?path=${sImgId}`;
+        const sImg = `/images/${sImgId}`;
+        this.marker.load(sImg);
         this.imgId = sImgId;
-        this.marker.load(`/images/${this.imgId}.jpg`);
     }
 
     setImgType = (sType) => {
@@ -163,7 +164,7 @@ class ImageMark extends React.Component {
         ];
         const actionBtn = [
             { name: 'load', text: 'Load', disabled: true },
-            { name: 'save', text: 'Save', disabled: true },
+            { name: 'save', text: 'Save', disabled: false },
             { name: 'reset', text: 'Reset', disabled: true },
         ];
 
@@ -186,7 +187,7 @@ class ImageMark extends React.Component {
             markInfo = this.marker.getAllMark();
         }
         return (
-            <div>
+            <div className="page-content">
                 {/* <div className="page-title">Mark: {this.state.markType}</div> */}
                 <div>
                     <ButtonGroup className="action-group" onClick={this.setImgType} buttons={toolBtn} type="radio" />
