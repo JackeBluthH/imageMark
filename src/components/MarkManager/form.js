@@ -8,11 +8,11 @@ const FormItem = {
     input: item => (
         <input name={item.name} defaultValue={item.value} />
     ),
-    select: item => {
-        <select name={item.name} value={item.value}>
+    select: item => (
+        <select name={item.name} defaultValue={item.value}>
             {item.options.map(opt => <option key={opt.value} value={opt.value}>{opt.text}</option>)}
         </select>
-    }
+    ),
 };
 
 function CustomForm({ name, title, items, ...params }) {
@@ -53,8 +53,8 @@ function CustomForm({ name, title, items, ...params }) {
                 ))}
             </div>
             <div className="form-footer">
-                <input type="submit" onClick={onApply} value="Apply" />
-                <input type="button" onClick={onCancel} value="Cancel" />
+                <input className="btn" type="submit" onClick={onApply} value="Apply" />
+                <input className="btn" type="button" onClick={onCancel} value="Cancel" />
             </div>
         </form>
     )

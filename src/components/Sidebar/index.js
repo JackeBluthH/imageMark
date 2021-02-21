@@ -16,6 +16,11 @@ function Sidebar(props) {
             <ul>
                 {menuData.map(item => <li key={item.key}><Link to={`/mark/${item.path}`}>{item.label}</Link></li>)}
             </ul>
+            <div>跟踪事项</div>
+            <ul>
+                <li><Link to="/task">跟踪事项</Link></li>
+            </ul>
+
         </div>
     )
 }

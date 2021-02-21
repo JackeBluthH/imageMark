@@ -73,7 +73,7 @@ function Coordin(originPoint) {
         },
 
         // 转换计算机坐标为画布坐标
-        transCanvasPort: function (screenPoint) {
+        screen2Cavas: function (screenPoint) {
             return {
                 x: screenPoint.x - originPoint.x,
                 y: screenPoint.y - originPoint.y,
@@ -228,7 +228,7 @@ function ImageManager(containerId) {
 
     // 更新缩放比例后需要重绘所有的标注框
     function setZoom(nZoom, centerPoint) {
-        const canvasP0 = coordin.transCanvasPort(centerPoint);
+        const canvasP0 = coordin.screen2Cavas(centerPoint);
         const userP = coordin.canvas2Image(canvasP0);
         log.debug('before zoom: ', canvasP0);
         log.debug('user point: ', userP);
@@ -322,7 +322,7 @@ function ImageManager(containerId) {
 
     // 根据屏幕上的一个点获取包含该点的所有标注对象
     function attachMarks(screenPoint) {
-        const canvasPoint = coordin.transCanvasPort(screenPoint);
+        const canvasPoint = coordin.screen2Cavas(screenPoint);
         // const imagePoint = coordin.canvas2Image(canvasPoint);
         return allMark.map((mark) => {
             const markType = MarkTypes.find(mt => mt.name === mark.type);
@@ -342,7 +342,7 @@ function ImageManager(containerId) {
     }
 
     function trigger(sName, screenPoint) {
-        const canvasPoint = coordin.transCanvasPort(screenPoint);
+        const canvasPoint = coordin.screen2Cavas(screenPoint);
         // const imagePoint = coordin.canvas2Image(canvasPoint);
         return allMark.some((mark) => {
             const markType = markTypes.find(mt => mt.name === mark.type);

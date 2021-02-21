@@ -1,4 +1,23 @@
 
+/**
+ * getinfo   #获取初始信息。和 post 格式内容一样，未标注的，objnum 为0。
+{
+'project':'demo',
+'optype':'face identify'    #'obj recog','face identify', 先分两个任务，前一个是从图片里标注物体；后一个是给两张图片，判断是否是一个类别，或者一个人。
+'pictures':[{'path':'demo/demo3.jpg','size_w':1920,'size_h':1080},[{'path':'demo/demo4.jpg','size_w':1920,'size_h':1080}]],
+'obj':      #defaut []  'obj recog'有效
+  [
+    {'pos':{'xmin':100,'xmax':200,'ymin':150,'ymax':250},
+     'class':'face',
+    },
+    {},
+    {}
+  ]
+'objnum':3.  #default 0     'obj recog' 有效
+'same':0.    #default -1    'face identify'有效
+}
+
+ */
 import React, { useState } from 'react';
 import MyEvent from '@/utils/MyEvent';
 import logger from '@/utils/log';
@@ -28,6 +47,7 @@ const log = logger('rect');
 function showPropertyPanel({ id }) {
     const RectForm = [
         { name: 'type', label: 'type', type: 'text', value: 'rect' },
+        { name: 'catagory', label: '类别', type: 'select', options: [{ value: 'dog', text: '狗' }, { value: 'cat', text: '猫' }, { value: 'flower', text: '花' }, { value: 'plant', text: '植物' }] },
         { name: 'name', label: 'name', type: 'input', value: id },
         { name: 'others', label: 'others', type: 'input' },
     ];
@@ -90,34 +110,73 @@ function getCloseBox(p1, p2) {
 }
 
 function factor({ coordin, saveMark, removeMark, updateMark }) {
-    const RenderSvg = function ({ points, drawing }) {
+    const RenderSvg = function ({ id, points, drawing }) {
         const [p1, p2] = points;
         if (!p2) {
             return null;
         }
 
         const rectProps = { ...p1, width: p2.x - p1.x, height: p2.y - p1.y };
+        if (drawing) {
+            // 拖动过程只画外框
+            return (
+                <g style={{ cursor: 'pointer' }}>
+                    <rect {...rectProps} stroke="red" fill="transparent"></rect>
+                    <rect {...rectProps} fill="rgb(0,0,0,0.5)"></rect>
+                </g>
+            );
+        }
+
         const closeBox = getCloseBox(p1, p2);
         return (
-            <g style={{ cursor: 'pointer' }}>
+            <g>
                 <rect {...rectProps} stroke="red" fill="transparent"></rect>
-                <rect {...rectProps} fill="rgb(0,0,0,0.5)"></rect>
+                <rect {...rectProps} fill="rgb(0,0,0,0.5)" style={{ cursor: 'move' }}></rect>
+
+                {/* title */}
+                <text
+                    x={rectProps.x + 10}
+                    y={rectProps.y + 20}
+                    textAnchor="middle"
+                    fill="white"
+                    style={{ cursor: 'pointer' }}
+                >{id}</text>
 
                 {/* close button */}
-                {!drawing && <rect
+                <rect
                     x={closeBox.left}
                     y={closeBox.top}
                     width={closeBox.right - closeBox.left}
                     height="20"
-                    // rx="5"
+                    rx="5"
                     fill="#2995ff"
-                ></rect>}
-                {!drawing && <text
+                    style={{ cursor: 'pointer' }}
+                ></rect>
+                <text
                     x={closeBox.left + 10}
                     y={closeBox.top + 13}
                     textAnchor="middle"
                     fill="white"
-                >x</text>}
+                    style={{ cursor: 'pointer' }}
+                >x</text>
+
+                {/* resise */}
+                <rect
+                    x={rectProps.x + rectProps.width - 10}
+                    y={rectProps.y + rectProps.height - 10}
+                    width="10"
+                    height="10"
+                    fill="#2995ff"
+                    style={{ cursor: 'nwse-resize' }}
+                ></rect>
+                <rect
+                    x={rectProps.x}
+                    y={rectProps.y + rectProps.height - 10}
+                    width="10"
+                    height="10"
+                    fill="#2995ff"
+                    style={{ cursor: 'nesw-resize' }}
+                ></rect>
             </g>
         );
 
@@ -129,7 +188,7 @@ function factor({ coordin, saveMark, removeMark, updateMark }) {
     }
 
     function create(p1) {
-        const P1 = coordin.transCanvasPort(p1);
+        const P1 = coordin.screen2Cavas(p1);
         const mark = {
             type: 'rect',
             points: [P1],
@@ -139,22 +198,26 @@ function factor({ coordin, saveMark, removeMark, updateMark }) {
             // container.removeChild(div);
         }
 
+        function moveTo(p2) {
+            const P2 = coordin.screen2Cavas(p2);
+            const width = Math.abs(P2.x - P1.x);
+            const height = Math.abs(P2.y - P1.y);
+
+            // 设置div的left为左边的点
+            const x1 = Math.min(P2.x, P1.x);
+            const y1 = Math.min(P2.y, P1.y);
+
+            mark.points = [
+                { x: x1, y: y1 },
+                { x: x1 + width, y: y1 + height },
+            ];
+        }
+
         return {
             getMark: () => ({ ...mark }),
-            moveTo: function _moveto(p2) {
-                const P2 = coordin.transCanvasPort(p2);
-                const width = Math.abs(P2.x - P1.x);
-                const height = Math.abs(P2.y - P1.y);
 
-                // 设置div的left为左边的点
-                const x1 = Math.min(P2.x, P1.x);
-                const y1 = Math.min(P2.y, P1.y);
-
-                mark.points = [
-                    { x: x1, y: y1 },
-                    { x: x1 + width, y: y1 + height },
-                ]
-            },
+            // moving
+            moveTo,
 
             // 取消时删除生成的DOM
             cancel,
@@ -190,30 +253,45 @@ function factor({ coordin, saveMark, removeMark, updateMark }) {
     const myEvent = MyEvent();
     myEvent.on('closeBtnMousedown', (mark) => {
         // remove the mark
-        log.debug('close:', mark);
+        log.debug('close:', mark.id);
         removeMark(mark.id);
     }).on('bodyMouseup', (mark) => {
+        log.debug('show panel:', mark.id);
         showPropertyPanel(mark);
-        return false;
+        // return false;
     });
 
     // 根据一个点捕获对应的标注对象，并返回具体的标注位置名称，可用于绑定处理事件
     // 标注对象子类为：body, title, closeBtn
     function attach(point, mark,) {
         // const [p1, p2] = mark.points;
-        const p1 = coordin.image2Canvas(mark.points[0]);
-        const p2 = coordin.image2Canvas(mark.points[1]);
+        const imageP1 = { ...mark.points[0] };
+        const imageP2 = { ...mark.points[1] };
+
+        const p1 = coordin.image2Canvas(imageP1);
+        const p2 = coordin.image2Canvas(imageP2);
         if (!inBox(point, { left: p1.x, right: p2.x, top: p1.y, bottom: p2.y })) {
             // 在标注框的外面
             return null;
         }
 
         let sAttachName = 'body';
-        log.debug('render closeBox:', p1, p2, point);
         if (inBox(point, getCloseBox(p1, p2))) {
             sAttachName = 'closeBtn';
         }
-        return { name: sAttachName };
+
+        log.debug('attached', sAttachName, p1, p2, point);
+        return {
+            name: sAttachName,
+            moveTo: (screenPoint) => {
+                const curPoint = coordin.screen2Cavas(screenPoint);
+                const userPoint = coordin.canvas2Image(curPoint);
+
+                const offsetX = userPoint.x - imageP1.x;
+                const offsetY = userPoint.y - imageP1.y;
+                mark.points = mark.points.map(p => ({ x: p.x + offsetX, y: p.y + offsetY }));
+            }
+        };
     }
 
     return {

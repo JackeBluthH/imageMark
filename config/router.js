@@ -15,6 +15,11 @@ const routes = [
         path: '/mark/:id',
         component: './Mark',
       },
+      {
+        name: 'task',
+        path: '/task',
+        component: './Task',
+      },
     ],
   },
 ];
