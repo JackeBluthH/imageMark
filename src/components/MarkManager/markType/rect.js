@@ -64,7 +64,7 @@ function showPropertyPanel({ id }) {
     name: id,
     title: '矩形框标注属性',
     items: RectForm,
-    onOK (values) {
+    onOK(values) {
       // updateMark
       log.debug(values);
     },
@@ -224,7 +224,7 @@ function factor({ coordin, saveMark, removeMark }) {
           rx="5"
           fill="#transparent"
           style={{ cursor: 'pointer' }}
-         />
+        />
         <text
           x={closeBox.left + 10}
           y={closeBox.top + 13}
@@ -244,7 +244,7 @@ function factor({ coordin, saveMark, removeMark }) {
           fill="#transparent"
           stroke="white"
           style={{ cursor: 'nwse-resize' }}
-         />
+        />
         <rect
           x={rectProps.x - 4}
           y={rectProps.y + rectProps.height / 2 - 8}
@@ -253,7 +253,7 @@ function factor({ coordin, saveMark, removeMark }) {
           fill="#transparent"
           stroke="white"
           style={{ cursor: 'ew-resize' }}
-         />
+        />
         <rect
           x={rectProps.x - 2}
           y={rectProps.y + rectProps.height - 8}
@@ -262,7 +262,7 @@ function factor({ coordin, saveMark, removeMark }) {
           fill="#transparent"
           stroke="white"
           style={{ cursor: 'nesw-resize' }}
-         />
+        />
         <rect
           x={rectProps.x + rectProps.width / 2 - 2}
           y={rectProps.y + rectProps.height - 8}
@@ -271,7 +271,7 @@ function factor({ coordin, saveMark, removeMark }) {
           fill="#transparent"
           stroke="white"
           style={{ cursor: 'ns-resize' }}
-         />
+        />
         <rect
           x={rectProps.x + rectProps.width - 8}
           y={rectProps.y + rectProps.height - 8}
@@ -280,7 +280,7 @@ function factor({ coordin, saveMark, removeMark }) {
           fill="#transparent"
           stroke="white"
           style={{ cursor: 'nwse-resize' }}
-         />
+        />
         <rect
           x={rectProps.x + rectProps.width - 8}
           y={rectProps.y + rectProps.height / 2 - 8}
@@ -289,7 +289,7 @@ function factor({ coordin, saveMark, removeMark }) {
           fill="#transparent"
           stroke="white"
           style={{ cursor: 'ew-resize' }}
-         />
+        />
         <rect
           x={rectProps.x + rectProps.width - 8}
           y={rectProps.y - 2}
@@ -298,7 +298,7 @@ function factor({ coordin, saveMark, removeMark }) {
           fill="#transparent"
           stroke="white"
           style={{ cursor: 'nesw-resize' }}
-         />
+        />
         <rect
           x={rectProps.x + rectProps.width / 2 - 8}
           y={rectProps.y - 2}
@@ -307,7 +307,7 @@ function factor({ coordin, saveMark, removeMark }) {
           fill="#transparent"
           stroke="white"
           style={{ cursor: 'ns-resize' }}
-         />
+        />
       </g>
     );
 
@@ -391,41 +391,45 @@ function factor({ coordin, saveMark, removeMark }) {
       showPropertyPanel(mark);
       // return false;
     })
-    .on('wsMousemove', (mark) => {
+    .on('wsMousedown', (mark, canvasPoint) => {
+      /* const userPoint = coordin.canvas2Image(canvasPoint);
+
+        const imageP1 = { ...mark.points[0] };
+        const imageP2 = { ...mark.points[1] };
+    
+        const p1 = coordin.image2Canvas(imageP1);
+        const p2 = userPoint;
+        mark.points[1] = p2; */
       // 西南 右下角
-      log.debug('wsMousemove:', mark.id);
+      log.debug('wsMousedown:', mark.id, canvasPoint);
     })
-    .on('wsMouseup', (mark) => {
-      // 西南 右下角
-      log.debug('wsMouseup:', mark.id);
-    })
-    .on('esMouseup', (mark) => {
+    .on('esMousedown', (mark) => {
       // 东南 左下角
-      log.debug('esMouseup:', mark.id);
+      log.debug('esMousedown:', mark.id);
     })
-    .on('wnMouseup', (mark) => {
+    .on('wnMousedown', (mark) => {
       // 西北 右下角
-      log.debug('wsMouseup:', mark.id);
+      log.debug('wsMousev:', mark.id);
     })
-    .on('enMouseup', (mark) => {
+    .on('enMousedown', (mark) => {
       // 东北 左下角
-      log.debug('esMouseup:', mark.id);
+      log.debug('esMousedown:', mark.id);
     })
-    .on('eMouseup', (mark) => {
+    .on('eMousedown', (mark) => {
       // 东 右边
-      log.debug('eMouseup:', mark.id);
+      log.debug('eMousedown:', mark.id);
     })
-    .on('wMouseup', (mark) => {
+    .on('wMousedown', (mark) => {
       // 西 左边
-      log.debug('wMouseup:', mark.id);
+      log.debug('wMousedown:', mark.id);
     })
-    .on('sMouseup', (mark) => {
+    .on('sMousedown', (mark) => {
       // 南 下边
-      log.debug('sMouseup:', mark.id);
+      log.debug('sMousedown:', mark.id);
     })
-    .on('nMouseup', (mark) => {
+    .on('nMousedown', (mark) => {
       // 南 下边
-      log.debug('nMouseup:', mark.id);
+      log.debug('nMousedown:', mark.id);
     });
 
   // 根据一个点捕获对应的标注对象，并返回具体的标注位置名称，可用于绑定处理事件
@@ -474,6 +478,10 @@ function factor({ coordin, saveMark, removeMark }) {
         const offsetY = userPoint.y - imageP1.y;
         mark.points = mark.points.map((p) => ({ x: p.x + offsetX, y: p.y + offsetY }));
       },
+      /*
+      end: (screenPoint) => {
+        //const curPoint = coordin.screen2Cavas(screenPoint);
+      } */
     };
   }
 
