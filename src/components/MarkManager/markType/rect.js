@@ -473,15 +473,14 @@ function factor({ coordin, saveMark, removeMark }) {
       moveTo: (screenPoint) => {
         const curPoint = coordin.screen2Cavas(screenPoint);
         const userPoint = coordin.canvas2Image(curPoint);
+        log.debug('moveTo',userPoint);
 
-        const offsetX = userPoint.x - imageP1.x;
-        const offsetY = userPoint.y - imageP1.y;
-        mark.points = mark.points.map((p) => ({ x: p.x + offsetX, y: p.y + offsetY }));
+        mark.points[1] = userPoint;
       },
-      /*
+      getMark: () => null,
       end: (screenPoint) => {
         //const curPoint = coordin.screen2Cavas(screenPoint);
-      } */
+      },
     };
   }
 

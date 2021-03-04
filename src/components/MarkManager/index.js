@@ -336,15 +336,17 @@ function ImageManager(containerId) {
                 return null;
             }
 
-            return {mark, attach};
+            return { mark, attach };
         }).filter(item => !!item);
         // console.log('attachMarks: ', marks);
     }
 
+    // 从所有mark中找到鼠标点击的那个
+    // 如果有重叠，则找到最上面的
     function trigger(sName, screenPoint) {
+        let markInst = null;
         const canvasPoint = coordin.screen2Cavas(screenPoint);
-        // const imagePoint = coordin.canvas2Image(canvasPoint);
-        return allMark.some((mark) => {
+        allMark.some((mark) => {
             const markType = markTypes.find(mt => mt.name === mark.type);
             if (!markType) {
                 // exception
@@ -357,22 +359,23 @@ function ImageManager(containerId) {
                 return false;
             }
 
-            const attach = markType.attach(canvasPoint, mark);
-            if (!attach) {
+            markInst = markType.attach(canvasPoint, mark);
+            if (!markInst) {
                 log.debug('no attached');
                 return false;
             }
 
-            log.debug('attached:', attach.name);
-            return !markType.trigger([attach.name, firstCapital(sName)].join(''), mark);
+            log.debug('attached:', markInst.name);
+            return !markType.trigger([markInst.name, firstCapital(sName)].join(''), mark);
         });
+        return markInst;
     }
 
     function removeMark(id) {
         allMark = allMark.filter(item => item.id !== id);
     }
 
-    const markTypes = MarkTypes.map(({factor, ...markType}) => ({
+    const markTypes = MarkTypes.map(({ factor, ...markType }) => ({
         ...markType,
         ...factor({
             container,

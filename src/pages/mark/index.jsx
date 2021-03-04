@@ -72,7 +72,8 @@ class ImageMark extends React.Component {
         const curPoint = { x: e.pageX, y: e.pageY };
         const { marker } = this;
 
-        if (marker.trigger('mousedown', curPoint)) {
+        this.moveObj = marker.trigger('mousedown', curPoint);
+        if (this.moveObj) {
             log.debug('attached mousedown');
             return;
         }
@@ -88,14 +89,6 @@ class ImageMark extends React.Component {
             circle: () => {
                 this.moveObj = this.marker.pluginCircle(curPoint);
             },
-            markDrag: () => {
-                
-                // dragObj.map(obj => log.debug(obj.attach))
-            },
-            markResize: () => {
-                // 
-                // const dragObj = marker.attachMarks(curPoint);
-            },
             _: () => (0),
         };
         const fn = actions[this.state.markType] || actions._;
@@ -109,11 +102,6 @@ class ImageMark extends React.Component {
 
         const curPoint = { x: e.pageX, y: e.pageY };
         const { marker } = this;
-
-        if (marker.trigger('mouseup', curPoint)) {
-            log.debug('attached mouseup');
-            return;
-        }
 
         const fnAction = ({
             zoomout: () => marker.zoomOut(curPoint),
