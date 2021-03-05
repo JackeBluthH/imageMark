@@ -79,20 +79,13 @@ class ImageMark extends React.Component {
         }
 
         const actions = {
-            move: () => {
-                this.moveObj = this.marker.pluginMove(curPoint);
-            },
-            rect: () => {
-                this.moveObj = this.marker.pluginRect(curPoint);
-                // this.setState({ curMark: this.moveObj.getMark() });
-            },
-            circle: () => {
-                this.moveObj = this.marker.pluginCircle(curPoint);
-            },
-            _: () => (0),
+            move: () => this.marker.pluginMove(curPoint),
+            rect: () => this.marker.pluginRect(curPoint),
+            circle: () => this.marker.pluginCircle(curPoint),
+            _: () => null,
         };
         const fn = actions[this.state.markType] || actions._;
-        fn();
+        this.moveObj = fn();
     }
 
     onMouseUp = (e) => {
@@ -108,7 +101,7 @@ class ImageMark extends React.Component {
             this.setState({});
             return;
         }
-        
+
         const fnAction = ({
             zoomout: () => marker.zoomOut(curPoint),
             zoomin: () => marker.zoomIn(curPoint),

@@ -436,20 +436,32 @@ function factor({ coordin, saveMark, removeMark }) {
     // west-south, 左下角
     name: 'ws',
     inBox: (point, p1, p2) => inBox(point, getWsBox(p1, p2)),
-    move: ({imageP1, imageP2, userPoint}) => {
+    move: ({imageP1, imageP2, curPort}) => {
       // 左下角resize，右边和上边不变
-      const newP1 = { x: Math.min(imageP2.x, userPoint.x), y: Math.min(imageP1.y, userPoint.y) };
-      const newP2 = { x: Math.max(imageP2.x, userPoint.x), y: Math.max(imageP1.y, userPoint.y) };
+      const newP1 = { x: Math.min(imageP2.x, curPort.x), y: Math.min(imageP1.y, curPort.y) };
+      const newP2 = { x: Math.max(imageP2.x, curPort.x), y: Math.max(imageP1.y, curPort.y) };
       return [newP1, newP2];
     }
   }, {
     // east-sourth， 右下角
     name: 'es',
     inBox: (point, p1, p2) => inBox(point, getEsBox(p1, p2)),
-    move: ({imageP1, userPoint}) => {
+    move: ({imageP1, curPort}) => {
       // 右下角resize，左边和上边不变
-      const newP1 = { x: Math.min(imageP1.x, userPoint.x), y: Math.min(imageP1.y, userPoint.y) };
-      const newP2 = { x: Math.max(imageP1.x, userPoint.x), y: Math.max(imageP1.y, userPoint.y) };
+      const newP1 = { x: Math.min(imageP1.x, curPort.x), y: Math.min(imageP1.y, curPort.y) };
+      const newP2 = { x: Math.max(imageP1.x, curPort.x), y: Math.max(imageP1.y, curPort.y) };
+      return [newP1, newP2];
+    }
+  }, {
+    // body: 不在其他位置时都算是body
+    name: 'body',
+    inBox: () => true,
+    move: ({imageP1, imageP2, startPort, curPort}) => {
+      // 点击body时移动标记
+      const offsetX = curPort.x - startPort.x;
+      const offsetY = curPort.y - startPort.y;
+      const newP1 = { x: imageP1.x + offsetX, y: imageP1.y + offsetY };
+      const newP2 = { x: imageP2.x + offsetX, y: imageP2.y + offsetY };
       return [newP1, newP2];
     }
   }];
@@ -462,6 +474,7 @@ function factor({ coordin, saveMark, removeMark }) {
     const imageP1 = { ...mark.points[0] };
     const imageP2 = { ...mark.points[1] };
 
+    const startUserPoint = coordin.canvas2Image(point);
     const p1 = coordin.image2Canvas(imageP1);
     const p2 = coordin.image2Canvas(imageP2);
     if (!inBox(point, { left: p1.x, right: p2.x, top: p1.y, bottom: p2.y })) {
@@ -502,7 +515,7 @@ function factor({ coordin, saveMark, removeMark }) {
         const userPoint = coordin.canvas2Image(curPoint);
 
         if (oItem.move) {
-          mark.points = oItem.move({imageP1, imageP2, userPoint});
+          mark.points = oItem.move({imageP1, imageP2, startPort: startUserPoint, curPort:userPoint});
         }
       },
       getMark: () => null,
