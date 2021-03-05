@@ -118,17 +118,17 @@ function getCloseBox(p1, p2) {
 }
 function getWsBox(p1, p2) {
   return {
-    left: p2.x - 10,
+    left: p1.x - 10,
     top: p2.y - 10,
-    right: p2.x + 10,
+    right: p1.x + 10,
     bottom: p2.y + 10,
   };
 }
 function getEsBox(p1, p2) {
   return {
-    left: p1.x - 10,
+    left: p2.x - 10,
     top: p2.y - 10,
-    right: p1.x + 10,
+    right: p2.x + 10,
     bottom: p2.y + 10,
   };
 }
@@ -369,7 +369,7 @@ function factor({ coordin, saveMark, removeMark }) {
     };
   }
 
-  function zoom() {}
+  function zoom() { }
 
   function inBox(p, box) {
     if (p.x < box.left || p.x > box.right || p.y < box.top || p.y > box.bottom) {
@@ -386,7 +386,7 @@ function factor({ coordin, saveMark, removeMark }) {
       log.debug('close:', mark.id);
       removeMark(mark.id);
     })
-    .on('bodyMouseup', (mark) => {
+    .on('bodyMousedown', (mark) => {
       log.debug('show panel:', mark.id);
       showPropertyPanel(mark);
       // return false;
@@ -432,6 +432,28 @@ function factor({ coordin, saveMark, removeMark }) {
       log.debug('nMousedown:', mark.id);
     });
 
+  const Resize = [{
+    // west-south, 左下角
+    name: 'ws',
+    inBox: (point, p1, p2) => inBox(point, getWsBox(p1, p2)),
+    move: ({imageP1, imageP2, userPoint}) => {
+      // 左下角resize，右边和上边不变
+      const newP1 = { x: Math.min(imageP2.x, userPoint.x), y: Math.min(imageP1.y, userPoint.y) };
+      const newP2 = { x: Math.max(imageP2.x, userPoint.x), y: Math.max(imageP1.y, userPoint.y) };
+      return [newP1, newP2];
+    }
+  }, {
+    // east-sourth， 右下角
+    name: 'es',
+    inBox: (point, p1, p2) => inBox(point, getEsBox(p1, p2)),
+    move: ({imageP1, userPoint}) => {
+      // 右下角resize，左边和上边不变
+      const newP1 = { x: Math.min(imageP1.x, userPoint.x), y: Math.min(imageP1.y, userPoint.y) };
+      const newP2 = { x: Math.max(imageP1.x, userPoint.x), y: Math.max(imageP1.y, userPoint.y) };
+      return [newP1, newP2];
+    }
+  }];
+
   // 根据一个点捕获对应的标注对象，并返回具体的标注位置名称，可用于绑定处理事件
   // 标注对象子类为：body, title, closeBtn
   function attach(point, oMark) {
@@ -447,39 +469,46 @@ function factor({ coordin, saveMark, removeMark }) {
       return null;
     }
 
-    let sAttachName = 'body';
-    if (inBox(point, getCloseBox(p1, p2))) {
-      sAttachName = 'closeBtn';
-    } else if (inBox(point, getEsBox(p1, p2))) {
-      sAttachName = 'es'; // w, s, ws, es
-    } else if (inBox(point, getWsBox(p1, p2))) {
-      sAttachName = 'ws'; // w, s, ws, es
-    } else if (inBox(point, getEnBox(p1, p2))) {
-      sAttachName = 'en'; // w, s, ws, es
-    } else if (inBox(point, getWnBox(p1))) {
-      sAttachName = 'wn'; // w, s, ws, es
-    } else if (inBox(point, getEBox(p1, p2))) {
-      sAttachName = 'e'; // w, s, ws, es
-    } else if (inBox(point, getWBox(p1, p2))) {
-      sAttachName = 'w'; // w, s, ws, es
-    } else if (inBox(point, getSBox(p1, p2))) {
-      sAttachName = 's'; // w, s, ws, es
-    } else if (inBox(point, getNBox(p1, p2))) {
-      sAttachName = 'n'; // w, s, ws, es
-    }
+    const oItem = Resize.find(item => item.inBox(point, p1, p2)) || {name: 'body'};
+    let sAttachName = oItem.name;
+
+    // if (inBox(point, getCloseBox(p1, p2))) {
+    //   sAttachName = 'closeBtn';
+    // } else if (inBox(point, getEsBox(p1, p2))) {
+    //   sAttachName = 'es'; // w, s, ws, es
+    // } else if (inBox(point, getWsBox(p1, p2))) {
+    //   sAttachName = 'ws'; // w, s, ws, es
+    // } else if (inBox(point, getEnBox(p1, p2))) {
+    //   sAttachName = 'en'; // w, s, ws, es
+    // } else if (inBox(point, getWnBox(p1))) {
+    //   sAttachName = 'wn'; // w, s, ws, es
+    // } else if (inBox(point, getEBox(p1, p2))) {
+    //   sAttachName = 'e'; // w, s, ws, es
+    // } else if (inBox(point, getWBox(p1, p2))) {
+    //   sAttachName = 'w'; // w, s, ws, es
+    // } else if (inBox(point, getSBox(p1, p2))) {
+    //   sAttachName = 's'; // w, s, ws, es
+    // } else if (inBox(point, getNBox(p1, p2))) {
+    //   sAttachName = 'n'; // w, s, ws, es
+    // }
+
+    mark.drawing = true;
     log.debug('attached', sAttachName, p1, p2, point);
     return {
       name: sAttachName,
       moveTo: (screenPoint) => {
+        // 4个角的resize
         const curPoint = coordin.screen2Cavas(screenPoint);
         const userPoint = coordin.canvas2Image(curPoint);
-        log.debug('moveTo',userPoint);
 
-        mark.points[1] = userPoint;
+        if (oItem.move) {
+          mark.points = oItem.move({imageP1, imageP2, userPoint});
+        }
       },
       getMark: () => null,
       end: (screenPoint) => {
         //const curPoint = coordin.screen2Cavas(screenPoint);
+        delete mark.drawing;
       },
     };
   }

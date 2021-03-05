@@ -103,16 +103,16 @@ class ImageMark extends React.Component {
         const curPoint = { x: e.pageX, y: e.pageY };
         const { marker } = this;
 
+        if (this.moveObj) {
+            this.end();
+            this.setState({});
+            return;
+        }
+        
         const fnAction = ({
             zoomout: () => marker.zoomOut(curPoint),
             zoomin: () => marker.zoomIn(curPoint),
-            zoomOrigin: () => marker.zoomOrigin(curPoint),
-            move: () => this.end(),
-            rect: () => this.end(),
-            circle: () => this.end(),
-            marks: () => {
-
-            }
+            zoomOrigin: () => marker.zoomOrigin(curPoint)
         })[this.state.markType];
         if (fnAction) {
             fnAction();
