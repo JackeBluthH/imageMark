@@ -369,7 +369,7 @@ function factor({ coordin, saveMark, removeMark }) {
     };
   }
 
-  function zoom() { }
+  function zoom() {}
 
   function inBox(p, box) {
     if (p.x < box.left || p.x > box.right || p.y < box.top || p.y > box.bottom) {
@@ -392,14 +392,6 @@ function factor({ coordin, saveMark, removeMark }) {
       // return false;
     })
     .on('wsMousedown', (mark, canvasPoint) => {
-      /* const userPoint = coordin.canvas2Image(canvasPoint);
-
-        const imageP1 = { ...mark.points[0] };
-        const imageP2 = { ...mark.points[1] };
-    
-        const p1 = coordin.image2Canvas(imageP1);
-        const p2 = userPoint;
-        mark.points[1] = p2; */
       // 西南 右下角
       log.debug('wsMousedown:', mark.id, canvasPoint);
     })
@@ -432,39 +424,109 @@ function factor({ coordin, saveMark, removeMark }) {
       log.debug('nMousedown:', mark.id);
     });
 
-  const Resize = [{
-    // west-south, 左下角
-    name: 'ws',
-    inBox: (point, p1, p2) => inBox(point, getWsBox(p1, p2)),
-    move: ({imageP1, imageP2, curPort}) => {
-      // 左下角resize，右边和上边不变
-      const newP1 = { x: Math.min(imageP2.x, curPort.x), y: Math.min(imageP1.y, curPort.y) };
-      const newP2 = { x: Math.max(imageP2.x, curPort.x), y: Math.max(imageP1.y, curPort.y) };
-      return [newP1, newP2];
-    }
-  }, {
-    // east-sourth， 右下角
-    name: 'es',
-    inBox: (point, p1, p2) => inBox(point, getEsBox(p1, p2)),
-    move: ({imageP1, curPort}) => {
-      // 右下角resize，左边和上边不变
-      const newP1 = { x: Math.min(imageP1.x, curPort.x), y: Math.min(imageP1.y, curPort.y) };
-      const newP2 = { x: Math.max(imageP1.x, curPort.x), y: Math.max(imageP1.y, curPort.y) };
-      return [newP1, newP2];
-    }
-  }, {
-    // body: 不在其他位置时都算是body
-    name: 'body',
-    inBox: () => true,
-    move: ({imageP1, imageP2, startPort, curPort}) => {
-      // 点击body时移动标记
-      const offsetX = curPort.x - startPort.x;
-      const offsetY = curPort.y - startPort.y;
-      const newP1 = { x: imageP1.x + offsetX, y: imageP1.y + offsetY };
-      const newP2 = { x: imageP2.x + offsetX, y: imageP2.y + offsetY };
-      return [newP1, newP2];
-    }
-  }];
+  const Resize = [
+    {
+      // west-south, 左下角
+      name: 'ws',
+      inBox: (point, p1, p2) => inBox(point, getWsBox(p1, p2)),
+      move: ({ imageP1, imageP2, curPort }) => {
+        // 左下角resize，右边和上边不变
+        const newP1 = { x: Math.min(imageP2.x, curPort.x), y: Math.min(imageP1.y, curPort.y) };
+        const newP2 = { x: Math.max(imageP2.x, curPort.x), y: Math.max(imageP1.y, curPort.y) };
+        return [newP1, newP2];
+      },
+    },
+    {
+      // east-sourth， 右下角
+      name: 'es',
+      inBox: (point, p1, p2) => inBox(point, getEsBox(p1, p2)),
+      move: ({ imageP1, curPort }) => {
+        // 右下角resize，左边和上边不变
+        const newP1 = { x: Math.min(imageP1.x, curPort.x), y: Math.min(imageP1.y, curPort.y) };
+        const newP2 = { x: Math.max(imageP1.x, curPort.x), y: Math.max(imageP1.y, curPort.y) };
+        return [newP1, newP2];
+      },
+    },
+    {
+      // west-north， 左上角
+      name: 'wn',
+      inBox: (point, p1, p2) => inBox(point, getWnBox(p1, p2)),
+      move: ({ imageP2, curPort }) => {
+        // 左上角resize，右边和下边不变
+        const newP1 = { x: Math.min(imageP2.x, curPort.x), y: Math.min(imageP2.y, curPort.y) };
+        const newP2 = { x: Math.max(imageP2.x, curPort.x), y: Math.max(imageP2.y, curPort.y) };
+        return [newP1, newP2];
+      },
+    },
+    {
+      // west-north， 右上角
+      name: 'en',
+      inBox: (point, p1, p2) => inBox(point, getEnBox(p1, p2)),
+      move: ({ imageP1, imageP2, curPort }) => {
+        // 右上角resize，左边和下边不变
+        const newP1 = { x: Math.min(imageP1.x, curPort.x), y: Math.min(imageP2.y, curPort.y) };
+        const newP2 = { x: Math.max(imageP1.x, curPort.x), y: Math.max(imageP2.y, curPort.y) };
+        return [newP1, newP2];
+      },
+    },
+    {
+      // east， 东 右边
+      name: 'e',
+      inBox: (point, p1, p2) => inBox(point, getEBox(p1, p2)),
+      move: ({ imageP1, imageP2, curPort }) => {
+        // 右边resize，
+        const newP1 = { x: Math.min(imageP1.x, curPort.x), y: Math.min(imageP1.y, curPort.y) };
+        const newP2 = { x: Math.max(imageP1.x, curPort.x), y: Math.max(imageP2.y, curPort.y) };
+        return [newP1, newP2];
+      },
+    },
+    {
+      // east， 西 左边
+      name: 'w',
+      inBox: (point, p1, p2) => inBox(point, getWBox(p1, p2)),
+      move: ({ imageP1, imageP2, curPort }) => {
+        // 左边resize，
+        const newP1 = { x: Math.min(imageP2.x, curPort.x), y: Math.min(imageP1.y, curPort.y) };
+        const newP2 = { x: Math.max(imageP2.x, curPort.x), y: Math.max(imageP2.y, curPort.y) };
+        return [newP1, newP2];
+      },
+    },
+    {
+      // east， 南 下边
+      name: 's',
+      inBox: (point, p1, p2) => inBox(point, getSBox(p1, p2)),
+      move: ({ imageP1, imageP2, curPort }) => {
+        // 下边resize，
+        const newP1 = { x: Math.min(imageP1.x, curPort.x), y: Math.min(imageP1.y, curPort.y) };
+        const newP2 = { x: Math.max(imageP2.x, curPort.x), y: Math.max(imageP1.y, curPort.y) };
+        return [newP1, newP2];
+      },
+    },
+    {
+      // north 北 上边
+      name: 'n',
+      inBox: (point, p1, p2) => inBox(point, getNBox(p1, p2)),
+      move: ({ imageP1, imageP2, curPort }) => {
+        // 上边resize，
+        const newP1 = { x: Math.min(imageP1.x, curPort.x), y: Math.min(imageP2.y, curPort.y) };
+        const newP2 = { x: Math.max(imageP2.x, curPort.x), y: Math.max(imageP2.y, curPort.y) };
+        return [newP1, newP2];
+      },
+    },
+    {
+      // body: 不在其他位置时都算是body
+      name: 'body',
+      inBox: () => true,
+      move: ({ imageP1, imageP2, startPort, curPort }) => {
+        // 点击body时移动标记
+        const offsetX = curPort.x - startPort.x;
+        const offsetY = curPort.y - startPort.y;
+        const newP1 = { x: imageP1.x + offsetX, y: imageP1.y + offsetY };
+        const newP2 = { x: imageP2.x + offsetX, y: imageP2.y + offsetY };
+        return [newP1, newP2];
+      },
+    },
+  ];
 
   // 根据一个点捕获对应的标注对象，并返回具体的标注位置名称，可用于绑定处理事件
   // 标注对象子类为：body, title, closeBtn
@@ -482,8 +544,8 @@ function factor({ coordin, saveMark, removeMark }) {
       return null;
     }
 
-    const oItem = Resize.find(item => item.inBox(point, p1, p2)) || {name: 'body'};
-    let sAttachName = oItem.name;
+    const oItem = Resize.find((item) => item.inBox(point, p1, p2)) || { name: 'body' };
+    const sAttachName = oItem.name;
 
     // if (inBox(point, getCloseBox(p1, p2))) {
     //   sAttachName = 'closeBtn';
@@ -515,12 +577,17 @@ function factor({ coordin, saveMark, removeMark }) {
         const userPoint = coordin.canvas2Image(curPoint);
 
         if (oItem.move) {
-          mark.points = oItem.move({imageP1, imageP2, startPort: startUserPoint, curPort:userPoint});
+          mark.points = oItem.move({
+            imageP1,
+            imageP2,
+            startPort: startUserPoint,
+            curPort: userPoint,
+          });
         }
       },
       getMark: () => null,
-      end: (screenPoint) => {
-        //const curPoint = coordin.screen2Cavas(screenPoint);
+      end: () => {
+        // const curPoint = coordin.screen2Cavas(screenPoint);
         delete mark.drawing;
       },
     };
