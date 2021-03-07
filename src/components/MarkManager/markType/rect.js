@@ -70,43 +70,8 @@ function showPropertyPanel({ id }) {
     },
   });
 }
-// function RectRender({ id, x, y, width, height, drawing, removeMark }) {
-//     const [visible, setVisible] = useState(true);
-// const style = {
-//     width: `${width}px`,
-//     height: `${height}px`,
-//     left: `${x}px`,
-//     top: `${y}px`,
-// }
 
-//     const onClick = (e) => {
-//         if (e.isDefaultPrevented()) {
-//             return;
-//         }
-//         e.preventDefault();
-//     }
-//     const onMouseDown = (e) => {
-//         e.preventDefault();
-//     }
-//     const onMouseUp = (e) => {
-//         e.preventDefault();
-//     }
-
-//     function onRemoveMark(e) {
-//         e.preventDefault();
-//         removeMark(id);
-//         setTimeout(() => setVisible(false), 10);
-//     }
-
-//     if (!visible) {
-//         return null;
-//     }
-//     return (
-//         <div onClick={onClick} onMouseDown={onMouseDown} onMouseUp={onMouseUp} className="mark-rect" key={id} style={style}>
-//             {!drawing && <div onClick={onRemoveMark} className="icon icon-close" />}
-//         </div>
-//     )
-// }
+// 获取热点区域
 
 function getCloseBox(p1, p2) {
   return {
@@ -180,6 +145,7 @@ function getNBox(p1, p2) {
     bottom: p1.y + 10,
   };
 }
+
 function factor({ coordin, saveMark, removeMark }) {
   function RenderSvg({ id, points, drawing }) {
     const [p1, p2] = points;
@@ -322,7 +288,7 @@ function factor({ coordin, saveMark, removeMark }) {
     const P1 = coordin.screen2Cavas(startPoint);
     const mark = {
       type: 'rect',
-      points: [P1],
+      points: [P1, P1],
     };
 
     function cancel() {
@@ -389,39 +355,6 @@ function factor({ coordin, saveMark, removeMark }) {
     .on('bodyMousedown', (mark) => {
       log.debug('show panel:', mark.id);
       showPropertyPanel(mark);
-      // return false;
-    })
-    .on('wsMousedown', (mark, canvasPoint) => {
-      // 西南 右下角
-      log.debug('wsMousedown:', mark.id, canvasPoint);
-    })
-    .on('esMousedown', (mark) => {
-      // 东南 左下角
-      log.debug('esMousedown:', mark.id);
-    })
-    .on('wnMousedown', (mark) => {
-      // 西北 右下角
-      log.debug('wsMousev:', mark.id);
-    })
-    .on('enMousedown', (mark) => {
-      // 东北 左下角
-      log.debug('esMousedown:', mark.id);
-    })
-    .on('eMousedown', (mark) => {
-      // 东 右边
-      log.debug('eMousedown:', mark.id);
-    })
-    .on('wMousedown', (mark) => {
-      // 西 左边
-      log.debug('wMousedown:', mark.id);
-    })
-    .on('sMousedown', (mark) => {
-      // 南 下边
-      log.debug('sMousedown:', mark.id);
-    })
-    .on('nMousedown', (mark) => {
-      // 南 下边
-      log.debug('nMousedown:', mark.id);
     });
 
   const Resize = [
@@ -459,7 +392,7 @@ function factor({ coordin, saveMark, removeMark }) {
       },
     },
     {
-      // west-north， 右上角
+      // east-north， 右上角
       name: 'en',
       inBox: (point, p1, p2) => inBox(point, getEnBox(p1, p2)),
       move: ({ imageP1, imageP2, curPort }) => {
@@ -481,7 +414,7 @@ function factor({ coordin, saveMark, removeMark }) {
       },
     },
     {
-      // east， 西 左边
+      // west 西 左边
       name: 'w',
       inBox: (point, p1, p2) => inBox(point, getWBox(p1, p2)),
       move: ({ imageP1, imageP2, curPort }) => {
@@ -492,7 +425,7 @@ function factor({ coordin, saveMark, removeMark }) {
       },
     },
     {
-      // east， 南 下边
+      // sourth 南 下边
       name: 's',
       inBox: (point, p1, p2) => inBox(point, getSBox(p1, p2)),
       move: ({ imageP1, imageP2, curPort }) => {
@@ -514,6 +447,11 @@ function factor({ coordin, saveMark, removeMark }) {
       },
     },
     {
+      // 关闭按钮
+      name: 'closeBtn',
+      inBox: (point, p1, p2) => inBox(point, getCloseBox(p1, p2)),
+    },
+    {
       // body: 不在其他位置时都算是body
       name: 'body',
       inBox: () => true,
@@ -529,10 +467,9 @@ function factor({ coordin, saveMark, removeMark }) {
   ];
 
   // 根据一个点捕获对应的标注对象，并返回具体的标注位置名称，可用于绑定处理事件
-  // 标注对象子类为：body, title, closeBtn
+  // 鼠标拖动时直接修改原有坐标，因此getMark不需要返回新的实例
   function attach(point, oMark) {
-    // const [p1, p2] = mark.points;
-    const mark = oMark;
+    const mark = oMark; // 直接使用oMark会有lint告警，因此使用新变量转接一下
     const imageP1 = { ...mark.points[0] };
     const imageP2 = { ...mark.points[1] };
 
@@ -546,29 +483,8 @@ function factor({ coordin, saveMark, removeMark }) {
 
     const oItem = Resize.find((item) => item.inBox(point, p1, p2)) || { name: 'body' };
     const sAttachName = oItem.name;
-
-    // if (inBox(point, getCloseBox(p1, p2))) {
-    //   sAttachName = 'closeBtn';
-    // } else if (inBox(point, getEsBox(p1, p2))) {
-    //   sAttachName = 'es'; // w, s, ws, es
-    // } else if (inBox(point, getWsBox(p1, p2))) {
-    //   sAttachName = 'ws'; // w, s, ws, es
-    // } else if (inBox(point, getEnBox(p1, p2))) {
-    //   sAttachName = 'en'; // w, s, ws, es
-    // } else if (inBox(point, getWnBox(p1))) {
-    //   sAttachName = 'wn'; // w, s, ws, es
-    // } else if (inBox(point, getEBox(p1, p2))) {
-    //   sAttachName = 'e'; // w, s, ws, es
-    // } else if (inBox(point, getWBox(p1, p2))) {
-    //   sAttachName = 'w'; // w, s, ws, es
-    // } else if (inBox(point, getSBox(p1, p2))) {
-    //   sAttachName = 's'; // w, s, ws, es
-    // } else if (inBox(point, getNBox(p1, p2))) {
-    //   sAttachName = 'n'; // w, s, ws, es
-    // }
-
-    mark.drawing = true;
     log.debug('attached', sAttachName, p1, p2, point);
+    mark.drawing = true;
     return {
       name: sAttachName,
       moveTo: (screenPoint) => {
